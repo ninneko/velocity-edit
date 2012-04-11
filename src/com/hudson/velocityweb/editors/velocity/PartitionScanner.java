@@ -28,6 +28,7 @@ public class PartitionScanner extends RuleBasedPartitionScanner {
 	public final static String STOP_PARTITION = "__stop_partition";
 	public final static String VARIABLE_PARTITION = "__variable_partition";
 	public final static String COMMENT_PARTITION = "__comment_partition";
+	public final static String TEXT_PARTITION = "__text_partition";
 
 	public final static String XML_DEFAULT = "__xml_default";
 	public final static String XML_COMMENT = "__xml_comment";
@@ -42,6 +43,7 @@ public class PartitionScanner extends RuleBasedPartitionScanner {
 			new SingleLineRule("##", "\n", new Token(COMMENT_PARTITION)),
 			new DirectiveRule(new Token(FOREACH_PARTITION), "foreach"),
 			new DirectiveRule(new Token(SET_PARTITION), "set"),
+			new DirectiveRule(new Token(TEXT_PARTITION), "txt"),
 			new DirectiveRule(new Token(IF_PARTITION), "if"),
 			new DirectiveRule(new Token(MACRO_PARTITION), "macro"),
 			new DirectiveRule(new Token(INCLUDE_PARTITION), "include"),

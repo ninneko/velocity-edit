@@ -20,6 +20,16 @@
          </export>
       </library>
       <library name="."/>
+      <library name="commons-lang3-3.1.jar">
+         <export
+               name="*">
+         </export>
+      </library>
+      <library name="IKAnalyzer2012.jar">
+         <export
+               name="*">
+         </export>
+      </library>
    </runtime>
 
    <requires>

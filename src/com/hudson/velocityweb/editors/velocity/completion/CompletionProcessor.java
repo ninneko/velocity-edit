@@ -1,6 +1,8 @@
 package com.hudson.velocityweb.editors.velocity.completion;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -37,6 +40,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 
 	private Editor editor;
 	private XMLCompletionProcessor xmlCompletionProcessor;
+	private WordCompleteEngine wordCompleteEngine = new WordCompleteEngine();
 	
 	public CompletionProcessor (Editor editor) {
 		this.editor = editor;
@@ -107,31 +111,21 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 				// process completions for the variable methods and properties
 				proposals = AbstractDirective.getCompletionProposals(editor.getFile(), doc, offset, variableAdditions, Thread.currentThread().getContextClassLoader(), false);
 			}
-			if (null == proposals || proposals.size() == 0) {
-				if (isDirectiveCommand(doc, offset)) {
-					ICompletionProposal[] p = getVelocityDirectiveProposals(editor.getFile(), doc, offset);
-					if (null != p && p.length > 0) {
-						if (null == proposals) proposals = new ArrayList();
-						for (int i=0; i<p.length; i++) {
-							proposals.add(p[i]);
-						}
-					}
+			
+			if (null == proposals) proposals = new ArrayList();
+			if (isDirectiveCommand(viewer.getDocument(), offset)) {
+			    proposals.addAll(getVelocityDirectiveProposals(editor.getFile(), viewer.getDocument(), offset));
+			} else {
+				ICompletionProposal[] computeCompletionProposals = xmlCompletionProcessor.computeCompletionProposals(viewer, offset, editor.getFile());
+				if (computeCompletionProposals != null) {
+					proposals.addAll(Arrays.asList(computeCompletionProposals));
 				}
-			}
-			if (null != proposals && proposals.size() > 0) {
-				Collections.sort(proposals, new CompletionProposalComparator());
-				ICompletionProposal[] proposalArr = new ICompletionProposal[proposals.size()];
-				int index=0;
-				for (Iterator i=proposals.iterator(); i.hasNext(); ) {
-					proposalArr[index++] = (ICompletionProposal) i.next();
-				}
-				return proposalArr;
 			}
 			
-			if (isDirectiveCommand(viewer.getDocument(), offset)) {
-			    return getVelocityDirectiveProposals(editor.getFile(), viewer.getDocument(), offset);
-			}
-			return xmlCompletionProcessor.computeCompletionProposals(viewer, offset, editor.getFile());
+			proposals.addAll(getWordCompletionProposals(editor.getFile(), doc, offset));
+			
+			Collections.sort(proposals, new CompletionProposalComparator());
+			return proposals.toArray(new ICompletionProposal[proposals.size()]);
 		}
 		catch (Throwable e) {
 			e.printStackTrace();
@@ -139,6 +133,35 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 		}
 	}
 	
+	private Collection<ICompletionProposal> getWordCompletionProposals(IFile file, IDocument doc, int offset) {
+		int startPos = offset;
+		try {
+			while(Character.isLetterOrDigit(doc.getChar(startPos - 1)))
+				startPos--;
+		} catch (BadLocationException e) {
+			// do nothing
+		}
+		
+		String prefix = StringUtils.EMPTY;
+		try {
+			prefix = doc.get(startPos, offset - startPos);
+		} catch (BadLocationException e) {
+			// do nothing
+		}
+		
+		List<String> suggestStrings = wordCompleteEngine.computeSuggestions(file, doc, prefix);
+		
+		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
+		proposals.add(new CompletionProposal(
+				"FUCK",
+				startPos,
+				offset - startPos,
+				"FUCK".length(),
+				Plugin.getDefault().getImage("wc"), "FUCKKK", null, null));
+		
+		return proposals;
+	}
+
 	public boolean isDirectiveCommand (IDocument doc, int offset) {
 	    try {
 	        char c = doc.getChar(--offset);
@@ -154,12 +177,13 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	    }
 	}
 	
-	private ICompletionProposal[] getVelocityDirectiveProposals(IFile file, IDocument doc, int anOffset) {
+	@SuppressWarnings("unchecked")
+	private List<CompletionProposal> getVelocityDirectiveProposals(IFile file, IDocument doc, int anOffset) {
 		if (anOffset > 1) {
 			try {
 				if (doc.getChar(anOffset-1) == '#') {
 					char c = doc.getChar(anOffset-2);
-					if (c == '#' || c == '*') return new ICompletionProposal[0];
+					if (c == '#' || c == '*') return Collections.EMPTY_LIST;
 				}
 			}
 			catch (BadLocationException e) {}
@@ -200,7 +224,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 					        end = i+1;
 					        break;
 					    }
-					    else stackSize--;
+						stackSize--;
 					}
 					else if (c == '\n') {
 					    end = anOffset;
@@ -279,7 +303,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 			    }
 			}
 			Collections.sort(proposals, PROPOSAL_COMPARATOR);
-			return (ICompletionProposal[]) proposals.toArray(new ICompletionProposal[proposals.size()]);
+			return proposals;
 	    }
 	    catch (Exception e) {
 	        return null;
@@ -307,7 +331,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	}
 	
 	public char[] getCompletionProposalAutoActivationCharacters() {
-		return new char[]{'.', '$', '<', '/', '\"', '#'};
+		return new char[]{'a','.', '$', '<', '/', '\"', '#'};
 	}
 	
 	private static Comparator<Object> PROPOSAL_COMPARATOR = new Comparator<Object>() {
