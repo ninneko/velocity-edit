@@ -40,7 +40,6 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 
 	private Editor editor;
 	private XMLCompletionProcessor xmlCompletionProcessor;
-	private WordCompleteEngine wordCompleteEngine = new WordCompleteEngine();
 	
 	public CompletionProcessor (Editor editor) {
 		this.editor = editor;
@@ -149,15 +148,17 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 			// do nothing
 		}
 		
-		List<String> suggestStrings = wordCompleteEngine.computeSuggestions(file, doc, prefix);
+		List<String> suggestStrings = WordCompleteEngine.getInstance().computeSuggestions(file, doc, prefix);
 		
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
-		proposals.add(new CompletionProposal(
-				"FUCK",
-				startPos,
-				offset - startPos,
-				"FUCK".length(),
-				Plugin.getDefault().getImage("wc"), "FUCKKK", null, null));
+		for (String string : suggestStrings) {
+			proposals.add(new CompletionProposal(
+					string,
+					startPos,
+					offset - startPos,
+					string.length(),
+					Plugin.getDefault().getImage("wc"), string, null, null));
+		}
 		
 		return proposals;
 	}
