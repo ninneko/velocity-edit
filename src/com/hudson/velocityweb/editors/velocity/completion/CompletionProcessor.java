@@ -13,6 +13,7 @@ import java.util.Stack;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -192,10 +193,19 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	    try {
 		    List<VelocityFile> projectMacros = ConfigurationManager.getInstance(file.getProject()).getMacroFiles();
 		    List<VelocityFile> macroFiles = new ArrayList<VelocityFile>(projectMacros.size() + 1);
-		    macroFiles.addAll(projectMacros);
-		    addLocalVelocityMacros(doc, macroFiles, anOffset);
 		    
-		    String testPrefix = "";
+		    // if the current file is macro library file, ignore
+		    for (VelocityFile velocityFile : projectMacros) {
+		    	if (!velocityFile.file.getPath().equals(file.getLocation().toOSString())) {
+					macroFiles.add(velocityFile);
+				}
+			}
+		    
+//		    macroFiles.addAll(macroFiles);
+		    
+			addLocalVelocityMacros(doc, macroFiles, anOffset);
+		    
+			String testPrefix = "";
 			int start = -1;
 			int end = -1;
 			try {
@@ -289,11 +299,13 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 							    buffer.append(vf.file.getName());
 							}
 						}
+						
 						proposals.add(new CompletionProposal(insert.toString(), start, end-start, macro.name.length()+1,
 								Plugin.getDefault().getImage("macro"), buffer.toString(), null, null));
 					}
 		        }
 		    }
+		    
 			String[] directives = {"foreach", "if", "else", "end", "macro", "parse", "include", "stop", "elseif"};
 			for (int i=0; i<directives.length; i++) {
 			    if (directives[i].toUpperCase().startsWith(testPrefix)) {
@@ -303,6 +315,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 				        proposals.add(new CompletionProposal(directives[i] + "()", start, end-start, directives[i].length()+1, Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
 			    }
 			}
+			
 			Collections.sort(proposals, PROPOSAL_COMPARATOR);
 			return proposals;
 	    }
@@ -352,8 +365,8 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	public class CompletionProposalComparator implements Comparator<Object> {
 		
 		public int compare(Object o1, Object o2) {
-			if (o1 instanceof WordCompletionProposal && o2 instanceof WordCompletionProposal) {
-				return ((WordCompletionProposal)o2).getRelevance() - ((WordCompletionProposal)o1).getRelevance(); 
+			if (o1 instanceof JavaCompletionProposal && o2 instanceof JavaCompletionProposal) {
+				return ((JavaCompletionProposal)o2).getRelevance() - ((JavaCompletionProposal)o1).getRelevance(); 
 			}
 			
 			if (null == o1) return -1;

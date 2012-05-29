@@ -119,10 +119,10 @@ public abstract class AbstractDirective implements IDirective {
 				if (c == '$') {
 					break;
 				}
-				else {
-					if (seenExclamation) seenExclamation = false;
-					if (c == '!') seenExclamation = true;
-				}
+				
+				if (seenExclamation) seenExclamation = false;
+				if (c == '!') seenExclamation = true;
+				
 				i--;
 				if (i>0) c = document.getChar(i);
 				else break;

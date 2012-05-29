@@ -2,13 +2,9 @@ package com.hudson.velocityweb.editors.velocity.completion;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,7 +26,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.jdt.internal.ui.text.template.contentassist.PositionBasedCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.contentassist.CompletionProposal;
@@ -85,7 +81,13 @@ public class WordCompleteEngine {
 	@SuppressWarnings("unchecked")
 	public List<ICompletionProposal> computeProposals(IFile file, IDocument doc, String prefix, int offset, int startPos) {
 		try {
-			parseDoc(file, doc);
+			long currentTime = System.currentTimeMillis();
+			if (lastIndexTime + 1000*5 <= currentTime || !file.getFullPath().toPortableString().equals(lastFileName)) {
+				parseDoc(file, doc);
+				
+				lastIndexTime = currentTime;
+				lastFileName = file.getFullPath().toPortableString();
+			}
 			
 			return computeProposals(prefix, file.getFullPath().toPortableString(), offset, startPos);
 		} catch (Exception e) {
@@ -142,11 +144,14 @@ public class WordCompleteEngine {
 //					string.length(),
 //					Plugin.getDefault().getImage("wc"), string, null, null));
 			
-			Position position = new Position(startPos, offset - startPos);
-			WordCompletionProposal proposal = new WordCompletionProposal(string, position, string.length(), Plugin
-					.getDefault().getImage("wc"), string, null, null, null);
+//			Position position = new Position(startPos, offset - startPos);
+//			JavaCompletionProposal proposal = new JavaCompletionProposal(string, position, string.length(), Plugin
+//					.getDefault().getImage("wc"), string, null, null, null);
+//			Position position = new Position(startPos, offset - startPos);
+			JavaCompletionProposal proposal = new JavaCompletionProposal(string, startPos, offset - startPos, Plugin
+					.getDefault().getImage("wc"), string, 200 + stringMap.get(string));
 
-			proposal.setRelevance(200 + stringMap.get(string));
+//			proposal.setRelevance(200 + stringMap.get(string));
 			proposals.add(proposal);
 		}
 		
@@ -172,11 +177,6 @@ public class WordCompleteEngine {
 //		Query query = queryParser.parse(file.getFullPath().toPortableString() + "*");
 //		
 //		indexWriter.deleteDocuments(query);
-		long currentTime = System.currentTimeMillis();
-		if (lastIndexTime + 1000*5 > currentTime && file.getFullPath().toPortableString().equals(lastFileName)) {
-			return;
-		}
-		
 		indexWriter.deleteAll();
 		
 		Document document = new Document();
@@ -188,7 +188,6 @@ public class WordCompleteEngine {
 		indexWriter.commit();
 		
 		lastFileName = file.getFullPath().toPortableString();
-		lastIndexTime = currentTime;
 //		if (!fileContentsMap.containsKey(file.getFullPath().toPortableString())) {
 //			fileContentsMap.put(file.getFullPath().toPortableString(), doc.get());
 //		}
