@@ -28,8 +28,6 @@ import org.apache.lucene.util.Version;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
 import org.eclipse.jface.text.IDocument;
-import org.eclipse.jface.text.Position;
-import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.wltea.analyzer.lucene.IKAnalyzer;
 
@@ -39,7 +37,7 @@ public class WordCompleteEngine {
 	
 	private static WordCompleteEngine INSTANCE;
 	
-	private static final int MAX_MATCH_SIZE = 20;
+	private static final int MAX_MATCH_SIZE = 50;
 
 	private Directory directory = new RAMDirectory();
 	
@@ -116,7 +114,7 @@ public class WordCompleteEngine {
 			String[] fragments = highlighter.getBestFragments(analyzer, CONTENT_FILE_NAME, content, MAX_MATCH_SIZE);
 			
 			for (int j = 0; j < fragments.length; j++) {
-				Matcher matcher = Pattern.compile("<B>\\w*</B>").matcher(fragments[j]);
+				Matcher matcher = Pattern.compile("<B>[^(</B>)]*</B>").matcher(fragments[j]);
 				
 				while(matcher.find()) {
 					String string = matcher.group();
