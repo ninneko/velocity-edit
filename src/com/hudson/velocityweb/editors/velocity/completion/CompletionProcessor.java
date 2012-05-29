@@ -148,19 +148,19 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 			// do nothing
 		}
 		
-		List<String> suggestStrings = WordCompleteEngine.getInstance().computeSuggestions(file, doc, prefix);
+		return WordCompleteEngine.getInstance().computeProposals(file, doc, prefix, offset, startPos);
 		
-		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
-		for (String string : suggestStrings) {
-			proposals.add(new CompletionProposal(
-					string,
-					startPos,
-					offset - startPos,
-					string.length(),
-					Plugin.getDefault().getImage("wc"), string, null, null));
-		}
-		
-		return proposals;
+//		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
+//		for (String string : suggestStrings) {
+//			proposals.add(new CompletionProposal(
+//					string,
+//					startPos,
+//					offset - startPos,
+//					string.length(),
+//					Plugin.getDefault().getImage("wc"), string, null, null));
+//		}
+//		
+//		return proposals;
 	}
 
 	public boolean isDirectiveCommand (IDocument doc, int offset) {
@@ -332,7 +332,8 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	}
 	
 	public char[] getCompletionProposalAutoActivationCharacters() {
-		return new char[]{'a','.', '$', '<', '/', '\"', '#'};
+		return new String("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.$</#").toCharArray();
+//		return new char[]{'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','a','a','a','a','a','a','a','a','a','a','a','a','.', '$', '<', '/', '\"', '#'};
 	}
 	
 	private static Comparator<Object> PROPOSAL_COMPARATOR = new Comparator<Object>() {
@@ -351,6 +352,10 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	public class CompletionProposalComparator implements Comparator<Object> {
 		
 		public int compare(Object o1, Object o2) {
+			if (o1 instanceof WordCompletionProposal && o2 instanceof WordCompletionProposal) {
+				return ((WordCompletionProposal)o2).getRelevance() - ((WordCompletionProposal)o1).getRelevance(); 
+			}
+			
 			if (null == o1) return -1;
 			else if (null == o2) return 1;
 			else return (((ICompletionProposal) o1).getDisplayString().compareTo(((ICompletionProposal) o2).getDisplayString()));
