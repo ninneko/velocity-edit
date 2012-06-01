@@ -11,6 +11,7 @@ import com.hudson.velocityweb.util.UIUtil;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.wb.swt.ResourceManager;
+import org.eclipse.jface.preference.StringFieldEditor;
 
 /**
  * @author Joe Hudson
@@ -19,6 +20,8 @@ import org.eclipse.wb.swt.ResourceManager;
 public class MainPreferences extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
 
 	public static final String AUTO_COMPLETE_DEPLAY = "auto_complete_delay";
+	
+	public static final String MACRO_TEMPLATE_PATH = "macro_template_path";
 	
 	public MainPreferences() {
 		super(GRID);
@@ -70,6 +73,11 @@ public class MainPreferences extends FieldEditorPreferencePage implements IWorkb
 			integerFieldEditor.setStringValue("80");
 			integerFieldEditor.setValidRange(0, 9999);
 			addField(integerFieldEditor);
+		}
+		{
+			StringFieldEditor stringFieldEditor = new StringFieldEditor(MACRO_TEMPLATE_PATH, "Macro Template Path:", -1, StringFieldEditor.VALIDATE_ON_KEY_STROKE, getFieldEditorParent());
+			stringFieldEditor.setStringValue("/src/main/webapp/home/templates/");
+			addField(stringFieldEditor);
 		}
 	}
 

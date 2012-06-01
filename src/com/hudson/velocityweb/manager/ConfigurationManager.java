@@ -36,6 +36,7 @@ import com.hudson.velocityweb.editors.velocity.parser.VelocityFile;
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacro;
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacroParser;
 import com.hudson.velocityweb.javascript.JavascriptFile;
+import com.hudson.velocityweb.preferences.MainPreferences;
 import com.hudson.velocityweb.util.ProjectClassLoader;
 import com.wutka.dtd.DTD;
 import com.wutka.dtd.DTDParser;
@@ -435,7 +436,8 @@ public class ConfigurationManager {
 //		        if (null == s) return macroFiles;	        	
 //		        File dir = new File(s);
 		        
-		        File dir = new File(project.getFile("/src/main/webapp/home/templates/").getLocationURI().toURL().getFile());
+		        File dir = new File(project.getFile(Plugin.getDefault().getPreferenceStore()
+						.getString(MainPreferences.MACRO_TEMPLATE_PATH)).getLocationURI().toURL().getFile());
 		        if (!dir.exists()) return macroFiles;
 		        File[] files = dir.listFiles();
 		        for (int i=0; i<files.length; i++) {

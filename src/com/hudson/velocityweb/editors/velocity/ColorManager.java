@@ -31,18 +31,18 @@ public class ColorManager {
 	public static final String COLOR_DEFAULT = "Color.XMLDefault";
 	public static final String COLOR_LINK = "Color.XMLLink";
 	
-	private RGB FOREACH_DIRECTIVE = new RGB(128, 0, 0);
-	private RGB SET_DIRECTIVE = new RGB(0, 128, 0);
-	private RGB IF_DIRECTIVE = new RGB(0, 0, 128);
-	private RGB MACRO_DIRECTIVE = new RGB(0, 0, 0);
-	private RGB VARIABLE = new RGB(113, 113, 32);
-	private RGB COMMENT = new RGB(0, 88, 0);
+	private RGB FOREACH_DIRECTIVE = new RGB(230, 0, 58);
+	private RGB SET_DIRECTIVE = new RGB(0, 151, 224);
+	private RGB IF_DIRECTIVE = new RGB(128, 0, 100);
+	private RGB MACRO_DIRECTIVE = new RGB(50, 101, 101);
+	private RGB VARIABLE = new RGB(255, 107, 36);
+	private RGB COMMENT = new RGB(0, 128, 0);
 
-	private RGB XML_COMMENT = new RGB(128, 0, 0);
+	private RGB XML_COMMENT = new RGB(0, 128, 0);
 	private RGB PROC_INSTR = new RGB(128, 128, 128);
-	private RGB STRING = new RGB(0, 128, 0);
+	private RGB STRING = new RGB(206, 145, 10);
 	private RGB DEFAULT = new RGB(0, 0, 0);
-	private RGB TAG = new RGB(0, 0, 128);
+	private RGB TAG = new RGB(0, 58, 194);
 	private RGB LINK = JFaceResources.getColorRegistry().get(JFacePreferences.HYPERLINK_COLOR).getRGB();
 	
 	private Map<String, RGB> defaultColorMap = new HashMap<String, RGB>();
