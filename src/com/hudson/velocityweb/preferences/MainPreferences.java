@@ -2,16 +2,14 @@ package com.hudson.velocityweb.preferences;
 
 import org.eclipse.jface.preference.ColorFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IntegerFieldEditor;
+import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.hudson.velocityweb.Plugin;
 import com.hudson.velocityweb.editors.velocity.ColorManager;
 import com.hudson.velocityweb.util.UIUtil;
-import org.eclipse.jface.preference.IntegerFieldEditor;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.wb.swt.ResourceManager;
-import org.eclipse.jface.preference.StringFieldEditor;
 
 /**
  * @author Joe Hudson
@@ -75,7 +73,8 @@ public class MainPreferences extends FieldEditorPreferencePage implements IWorkb
 			addField(integerFieldEditor);
 		}
 		{
-			StringFieldEditor stringFieldEditor = new StringFieldEditor(MACRO_TEMPLATE_PATH, "Macro Template Path:", -1, StringFieldEditor.VALIDATE_ON_KEY_STROKE, getFieldEditorParent());
+			StringFieldEditor stringFieldEditor = new StringFieldEditor(MACRO_TEMPLATE_PATH, "Macro Template Path:", 40, StringFieldEditor.VALIDATE_ON_KEY_STROKE, getFieldEditorParent());
+			stringFieldEditor.setEmptyStringAllowed(false);
 			stringFieldEditor.setStringValue("/src/main/webapp/home/templates/");
 			addField(stringFieldEditor);
 		}

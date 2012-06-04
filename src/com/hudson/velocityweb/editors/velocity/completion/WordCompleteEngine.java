@@ -80,7 +80,7 @@ public class WordCompleteEngine {
 	public List<ICompletionProposal> computeProposals(IFile file, IDocument doc, String prefix, int offset, int startPos) {
 		try {
 			long currentTime = System.currentTimeMillis();
-			if (lastIndexTime + 1000*5 <= currentTime || !file.getFullPath().toPortableString().equals(lastFileName)) {
+			if (lastIndexTime + 1000*10 <= currentTime || !file.getFullPath().toPortableString().equals(lastFileName)) {
 				parseDoc(file, doc);
 				
 				lastIndexTime = currentTime;
@@ -110,7 +110,6 @@ public class WordCompleteEngine {
 			Highlighter highlighter = new Highlighter(scorer);
 
 			String content = indexSearcher.doc(scoreDocs[i].doc).get(CONTENT_FILE_NAME);
-//			String content = fileContentsMap.get(fileID);
 			String[] fragments = highlighter.getBestFragments(analyzer, CONTENT_FILE_NAME, content, MAX_MATCH_SIZE);
 			
 			for (int j = 0; j < fragments.length; j++) {

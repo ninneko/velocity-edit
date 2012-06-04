@@ -14,6 +14,7 @@ import java.util.Stack;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
+import org.eclipse.jdt.internal.ui.text.java.ParameterGuessingProposal;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -36,319 +37,358 @@ import com.hudson.velocityweb.editors.velocity.parser.VelocityMacro;
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacroParser;
 import com.hudson.velocityweb.manager.ConfigurationManager;
 
-
 public class CompletionProcessor extends TemplateCompletionProcessor implements IContentAssistProcessor {
 
 	private Editor editor;
 	private XMLCompletionProcessor xmlCompletionProcessor;
-	
-	public CompletionProcessor (Editor editor) {
+
+	public CompletionProcessor(Editor editor) {
 		this.editor = editor;
 		this.xmlCompletionProcessor = new XMLCompletionProcessor(editor.getFile());
 	}
-	
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 		try {
 			IDocument doc = viewer.getDocument();
 			List<Integer> typedOffsets = new ArrayList<Integer>();
 			String[] categories = doc.getPositionCategories();
-			
-			for (int i=0; i<categories.length; i++) {
-				
+
+			for (int i = 0; i < categories.length; i++) {
+
 				Position[] positions = doc.getPositions(categories[i]);
-				for (int j=0; j<positions.length; j++) {
+				for (int j = 0; j < positions.length; j++) {
 					typedOffsets.add(new Integer(positions[j].getOffset()));
 				}
 			}
 			Collections.sort(typedOffsets);
-			
+
 			Stack<IDirective> directiveStack = new Stack<IDirective>();
 			List<IDirective> noStackDirectives = new ArrayList<IDirective>();
 			ITypedRegion region = null;
 			IDirective lastDirective = null;
-			for (Iterator<Integer> i=typedOffsets.iterator(); i.hasNext(); ) {
+			for (Iterator<Integer> i = typedOffsets.iterator(); i.hasNext();) {
 				int tOffset = ((Integer) i.next()).intValue();
-				if (tOffset > offset) break;
+				if (tOffset > offset)
+					break;
 				region = doc.getPartition(tOffset);
 				if (DirectiveFactory.isEndDirective(region.getType())) {
 					// remove from the directiveStack
 					if (directiveStack.size() > 0) {
 						directiveStack.pop();
 					}
-				}
-				else {
+				} else {
 					IDirective directive = DirectiveFactory.getDirective(region.getType(), region, doc);
 					if (null != directive) {
-						if (directive.requiresEnd()) directiveStack.push(directive);
+						if (directive.requiresEnd())
+							directiveStack.push(directive);
 						else {
 							noStackDirectives.add(directive);
-							
+
 						}
 						lastDirective = directive;
 					}
 				}
 			}
+			
 			List<ICompletionProposal> proposals = null;
 			Map variableAdditions = new HashMap();
-			for (Iterator<IDirective> i=noStackDirectives.iterator(); i.hasNext(); ) {
+			for (Iterator<IDirective> i = noStackDirectives.iterator(); i.hasNext();) {
 				IDirective directive = (IDirective) i.next();
 				if (offset > directive.getOffset() + directive.getLength()) {
-					directive.addVariableAdditions(editor.getFile(), Thread.currentThread().getContextClassLoader(), variableAdditions);
+					directive.addVariableAdditions(editor.getFile(), Thread.currentThread().getContextClassLoader(),
+							variableAdditions);
 				}
-			}
-			for (Iterator i=directiveStack.iterator(); i.hasNext(); ) {
-				IDirective directive = (IDirective) i.next();
-				if (offset > directive.getOffset() + directive.getLength()) {
-					directive.addVariableAdditions(editor.getFile(), Thread.currentThread().getContextClassLoader(), variableAdditions);
-				}
-			}
-			if (null != lastDirective && lastDirective.isCursorInDirective(offset)) {
-				proposals = lastDirective.getCompletionProposals(editor.getFile(), offset, variableAdditions, Thread.currentThread().getContextClassLoader());
-				proposals = AbstractDirective.getCompletionProposals(editor.getFile(), doc, offset, variableAdditions, Thread.currentThread().getContextClassLoader(), false);
-			}
-			else {
-				// process completions for the variable methods and properties
-				proposals = AbstractDirective.getCompletionProposals(editor.getFile(), doc, offset, variableAdditions, Thread.currentThread().getContextClassLoader(), false);
 			}
 			
-			if (null == proposals) proposals = new ArrayList();
-			if (isDirectiveCommand(viewer.getDocument(), offset)) {
-			    proposals.addAll(getVelocityDirectiveProposals(editor.getFile(), viewer.getDocument(), offset));
+			for (Iterator i = directiveStack.iterator(); i.hasNext();) {
+				IDirective directive = (IDirective) i.next();
+				if (offset > directive.getOffset() + directive.getLength()) {
+					directive.addVariableAdditions(editor.getFile(), Thread.currentThread().getContextClassLoader(),
+							variableAdditions);
+				}
+			}
+			
+			if (null != lastDirective && lastDirective.isCursorInDirective(offset)) {
+				proposals = lastDirective.getCompletionProposals(editor.getFile(), offset, variableAdditions, Thread
+						.currentThread().getContextClassLoader());
+				proposals = AbstractDirective.getCompletionProposals(editor.getFile(), doc, offset, variableAdditions,
+						Thread.currentThread().getContextClassLoader(), false);
 			} else {
-				ICompletionProposal[] computeCompletionProposals = xmlCompletionProcessor.computeCompletionProposals(viewer, offset, editor.getFile());
+				// process completions for the variable methods and properties
+				proposals = AbstractDirective.getCompletionProposals(editor.getFile(), doc, offset, variableAdditions,
+						Thread.currentThread().getContextClassLoader(), false);
+			}
+
+			if (null == proposals)
+				proposals = new ArrayList();
+			if (isDirectiveCommand(viewer.getDocument(), offset)) {
+				proposals.addAll(getVelocityDirectiveProposals(editor.getFile(), viewer.getDocument(), offset));
+			} else {
+				ICompletionProposal[] computeCompletionProposals = xmlCompletionProcessor.computeCompletionProposals(
+						viewer, offset, editor.getFile());
 				if (computeCompletionProposals != null) {
 					proposals.addAll(Arrays.asList(computeCompletionProposals));
 				}
 			}
-			
+
 			proposals.addAll(getWordCompletionProposals(editor.getFile(), doc, offset));
-			
+
 			Collections.sort(proposals, new CompletionProposalComparator());
 			return proposals.toArray(new ICompletionProposal[proposals.size()]);
-		}
-		catch (Throwable e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
-	
+
 	private Collection<ICompletionProposal> getWordCompletionProposals(IFile file, IDocument doc, int offset) {
 		int startPos = offset;
 		try {
-			while(Character.isLetterOrDigit(doc.getChar(startPos - 1)))
+			while (Character.isLetterOrDigit(doc.getChar(startPos - 1)))
 				startPos--;
 		} catch (BadLocationException e) {
 			// do nothing
 		}
-		
+
 		String prefix = StringUtils.EMPTY;
 		try {
 			prefix = doc.get(startPos, offset - startPos);
 		} catch (BadLocationException e) {
 			// do nothing
 		}
-		
+
 		return WordCompleteEngine.getInstance().computeProposals(file, doc, prefix, offset, startPos);
-		
-//		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
-//		for (String string : suggestStrings) {
-//			proposals.add(new CompletionProposal(
-//					string,
-//					startPos,
-//					offset - startPos,
-//					string.length(),
-//					Plugin.getDefault().getImage("wc"), string, null, null));
-//		}
-//		
-//		return proposals;
+
+		// List<ICompletionProposal> proposals = new
+		// ArrayList<ICompletionProposal>();
+		// for (String string : suggestStrings) {
+		// proposals.add(new CompletionProposal(
+		// string,
+		// startPos,
+		// offset - startPos,
+		// string.length(),
+		// Plugin.getDefault().getImage("wc"), string, null, null));
+		// }
+		//
+		// return proposals;
 	}
 
-	public boolean isDirectiveCommand (IDocument doc, int offset) {
-	    try {
-	        char c = doc.getChar(--offset);
-	        while (!Character.isWhitespace(c)) {
-	            if (c == '#') return true;
-	            c = doc.getChar(--offset);
-	        }
-	        return false;
-	        
-	    }
-	    catch (BadLocationException e) {
-	        return false;
-	    }
+	public boolean isDirectiveCommand(IDocument doc, int offset) {
+		try {
+			char c = doc.getChar(--offset);
+			while (!Character.isWhitespace(c)) {
+				if (c == '#')
+					return true;
+				c = doc.getChar(--offset);
+			}
+			return false;
+
+		} catch (BadLocationException e) {
+			return false;
+		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	private List<CompletionProposal> getVelocityDirectiveProposals(IFile file, IDocument doc, int anOffset) {
 		if (anOffset > 1) {
 			try {
-				if (doc.getChar(anOffset-1) == '#') {
-					char c = doc.getChar(anOffset-2);
-					if (c == '#' || c == '*') return Collections.EMPTY_LIST;
+				if (doc.getChar(anOffset - 1) == '#') {
+					char c = doc.getChar(anOffset - 2);
+					if (c == '#' || c == '*')
+						return Collections.EMPTY_LIST;
 				}
+			} catch (BadLocationException e) {
 			}
-			catch (BadLocationException e) {}
 		}
-	    try {
-		    List<VelocityFile> projectMacros = ConfigurationManager.getInstance(file.getProject()).getMacroFiles();
-		    List<VelocityFile> macroFiles = new ArrayList<VelocityFile>(projectMacros.size() + 1);
-		    
-		    // if the current file is macro library file, ignore
-		    for (VelocityFile velocityFile : projectMacros) {
-		    	if (!velocityFile.file.getPath().equals(file.getLocation().toOSString())) {
+		
+		try {
+			List<VelocityFile> projectMacros = ConfigurationManager.getInstance(file.getProject()).getMacroFiles();
+			List<VelocityFile> macroFiles = new ArrayList<VelocityFile>(projectMacros.size() + 1);
+
+			// if the current file is macro library file, ignore
+			for (VelocityFile velocityFile : projectMacros) {
+				if (!velocityFile.file.getPath().equals(file.getLocation().toOSString())) {
 					macroFiles.add(velocityFile);
 				}
 			}
-		    
-//		    macroFiles.addAll(macroFiles);
-		    
+
+			// macroFiles.addAll(macroFiles);
+
 			addLocalVelocityMacros(doc, macroFiles, anOffset);
-		    
+
 			String testPrefix = "";
 			int start = -1;
 			int end = -1;
 			try {
-				for (int i=anOffset-1; i>=0; i--) {
+				for (int i = anOffset - 1; i >= 0; i--) {
 					char c = doc.getChar(i);
 					if (c == '#') {
-						start = i+1;
+						start = i + 1;
 						break;
 					}
 				}
+			} catch (BadLocationException e) {
+				start = anOffset;
 			}
-			catch (BadLocationException e) {
-			    start = anOffset;
-			}
-			
+
 			try {
-			    int textEnd = -1;
-			    int stackSize = 0;
-				for (int i=anOffset; i<doc.getLength(); i++) {
+				int textEnd = -1;
+				int stackSize = 0;
+				for (int i = anOffset; i < doc.getLength(); i++) {
 					char c = doc.getChar(i);
 					if (c == '(') {
 						stackSize++;
-						if (textEnd == -1) textEnd = i;
-					}
-					else if (c == ')') {
-					    if (stackSize == 1) {
-					        end = i+1;
-					        break;
-					    }
+						if (textEnd == -1)
+							textEnd = i;
+					} else if (c == ')') {
+						if (stackSize == 1) {
+							end = i + 1;
+							break;
+						}
 						stackSize--;
-					}
-					else if (c == '\n') {
-					    end = anOffset;
-					    if (textEnd == -1) textEnd = i;
-					    break;
-					}
-					else if (Character.isWhitespace(c)) {
-					    if (textEnd == -1) textEnd = i;
-					}
-					else break;
+					} else if (c == '\n') {
+						end = anOffset;
+						if (textEnd == -1)
+							textEnd = i;
+						break;
+					} else if (Character.isWhitespace(c)) {
+						if (textEnd == -1)
+							textEnd = i;
+					} else
+						break;
 				}
-				if (textEnd == -1) textEnd = anOffset;
+				if (textEnd == -1)
+					textEnd = anOffset;
 				if (textEnd > start) {
 					if (textEnd > anOffset)
-						testPrefix = doc.get(start, anOffset-start);
+						testPrefix = doc.get(start, anOffset - start);
 					else
-						testPrefix = doc.get(start, textEnd-start);
-					if (end < textEnd) end = textEnd;
+						testPrefix = doc.get(start, textEnd - start);
+					if (end < textEnd)
+						end = textEnd;
 				}
-			}
-			catch (BadLocationException e) {
-			    end = anOffset;
-			}
-			if (end == -1) end = anOffset;
-			if (start == -1) start = anOffset;
-			testPrefix = testPrefix.toUpperCase();
-
-		    List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
-		    for (Iterator<VelocityFile> i=macroFiles.iterator(); i.hasNext(); ) {
-		        VelocityFile vf = (VelocityFile) i.next();
-		        for (int j=0; j<vf.getMacros().length; j++) {
-		            VelocityMacro macro = vf.getMacros()[j];
-			        String name = macro.name.toUpperCase();
-					if (name.startsWith(testPrefix)) {
-						StringBuffer insert = new StringBuffer();
-						insert.append(macro.name);
-						insert.append("(");
-						for (int k = 0; k < macro.parameters.length; k++) {
-							if (k > 0) insert.append(" ");
-							insert.append("[" + macro.parameters[k] + "]");
-						}
-						insert.append(")");
-						
-						StringBuffer buffer = new StringBuffer();
-						buffer.append(macro.name);
-						buffer.append('(');
-		
-						if (macro.parameters.length == 0) {
-							buffer.append(')');
-						} else {
-							for (int k = 0; k < macro.parameters.length; k++) {
-								buffer.append(macro.parameters[k]);
-								if (k < (macro.parameters.length - 1)) {
-									buffer.append(" ");
-								}
-							}
-		
-							buffer.append(')');
-							if (vf.file != null) {
-							    buffer.append(" - ");
-							    buffer.append(vf.file.getName());
-							}
-						}
-						
-						proposals.add(new CompletionProposal(insert.toString(), start, end-start, macro.name.length()+1,
-								Plugin.getDefault().getImage("macro"), buffer.toString(), null, null));
-					}
-		        }
-		    }
-		    
-			String[] directives = {"foreach", "if", "else", "end", "macro", "parse", "include", "stop", "elseif"};
-			for (int i=0; i<directives.length; i++) {
-			    if (directives[i].toUpperCase().startsWith(testPrefix)) {
-				    if (directives[i].equals("else") || directives[i].equals("end") || directives[i].equals("stop") || directives[i].equals("elseif"))
-				        proposals.add(new CompletionProposal(directives[i], start, end-start, directives[i].length(), Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
-				    else
-				        proposals.add(new CompletionProposal(directives[i] + "()", start, end-start, directives[i].length()+1, Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
-			    }
+			} catch (BadLocationException e) {
+				end = anOffset;
 			}
 			
+			if (end == -1)
+				end = anOffset;
+			if (start == -1)
+				start = anOffset;
+			
+			testPrefix = testPrefix.toUpperCase();
+
+			List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+
+			proposals.addAll(buildMacroProposals(macroFiles, testPrefix, start, end));
+			proposals.addAll(buildKeywordsProposals(testPrefix, start, end));
+
 			Collections.sort(proposals, PROPOSAL_COMPARATOR);
 			return proposals;
-	    }
-	    catch (Exception e) {
-	        return null;
-	    }
+		} catch (Exception e) {
+			return null;
+		}
 	}
-	
+
+	private List<CompletionProposal> buildMacroProposals(List<VelocityFile> macroFiles, String testPrefix, int start, int end) {
+		List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+		
+		for (Iterator<VelocityFile> i = macroFiles.iterator(); i.hasNext();) {
+			VelocityFile vf = (VelocityFile) i.next();
+			for (int j = 0; j < vf.getMacros().length; j++) {
+				VelocityMacro macro = vf.getMacros()[j];
+				String name = macro.name.toUpperCase();
+				if (name.startsWith(testPrefix)) {
+					StringBuffer insert = new StringBuffer();
+					insert.append(macro.name);
+					insert.append("(");
+					
+					for (int k = 0; k < macro.parameters.length; k++) {
+						if (k > 0)
+							insert.append(" ");
+						insert.append("[" + macro.parameters[k] + "]");
+					}
+					insert.append(")");
+
+					String buffer = insert.toString() + " - " + vf.file.getName();
+					
+//					StringBuffer buffer = new StringBuffer();
+//					buffer.append(macro.name);
+//					buffer.append('(');
+//
+//					if (macro.parameters.length == 0) {
+//						buffer.append(')');
+//					} else {
+//						for (int k = 0; k < macro.parameters.length; k++) {
+//							buffer.append(macro.parameters[k]);
+//							if (k < (macro.parameters.length - 1)) {
+//								buffer.append(" ");
+//							}
+//						}
+//
+//						buffer.append(')');
+//						if (vf.file != null) {
+//							buffer.append(" - ");
+//							buffer.append(vf.file.getName());
+//						}
+//					}
+
+					proposals.add(new CompletionProposal(insert.toString(), start, end - start,
+							macro.name.length() + 1, Plugin.getDefault().getImage("macro"), buffer, null,
+							null));
+				}
+			}
+		}
+		
+		return proposals;
+	}
+
+	private List<CompletionProposal> buildKeywordsProposals(String testPrefix, int start, int end) {
+		List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+		
+		String[] directives = { "foreach", "if", "else", "end", "macro", "parse", "include", "stop", "elseif" };
+		for (int i = 0; i < directives.length; i++) {
+			if (directives[i].toUpperCase().startsWith(testPrefix)) {
+				if (directives[i].equals("else") || directives[i].equals("end") || directives[i].equals("stop")
+						|| directives[i].equals("elseif"))
+					proposals.add(new CompletionProposal(directives[i], start, end - start, directives[i].length(),
+							Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
+				else
+					proposals.add(new CompletionProposal(directives[i] + "()", start, end - start, directives[i]
+							.length() + 1, Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
+			}
+		}
+		
+		return proposals;
+	}
+
 	private void addLocalVelocityMacros(IDocument doc, List<VelocityFile> macroFiles, int anOffset) {
-	    try {
-	        VelocityMacro[] macros = VelocityMacroParser.parse(doc.get());
-	        if (macros.length > 0) {
-	            macroFiles.add(new VelocityFile(macros));
-	        }
-	    }
-	    catch (Exception e) {}
+		try {
+			VelocityMacro[] macros = VelocityMacroParser.parse(doc.get());
+			if (macros.length > 0) {
+				macroFiles.add(new VelocityFile(macros));
+			}
+		} catch (Exception e) {
+		}
 	}
-	
+
 	protected TemplateContextType getContextType(ITextViewer viewer, IRegion region) {
 		return null;
 	}
+
 	protected Image getImage(Template template) {
 		return null;
 	}
+
 	protected Template[] getTemplates(String contextTypeId) {
 		return null;
 	}
-	
+
 	public char[] getCompletionProposalAutoActivationCharacters() {
 		return new String("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.$</#").toCharArray();
-//		return new char[]{'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','a','a','a','a','a','a','a','a','a','a','a','a','.', '$', '<', '/', '\"', '#'};
 	}
-	
+
 	private static Comparator<Object> PROPOSAL_COMPARATOR = new Comparator<Object>() {
 		public int compare(Object aProposal1, Object aProposal2) {
 			String text1 = ((CompletionProposal) aProposal1).getDisplayString();
@@ -363,15 +403,19 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	};
 
 	public class CompletionProposalComparator implements Comparator<Object> {
-		
+
 		public int compare(Object o1, Object o2) {
 			if (o1 instanceof JavaCompletionProposal && o2 instanceof JavaCompletionProposal) {
-				return ((JavaCompletionProposal)o2).getRelevance() - ((JavaCompletionProposal)o1).getRelevance(); 
+				return ((JavaCompletionProposal) o2).getRelevance() - ((JavaCompletionProposal) o1).getRelevance();
 			}
-			
-			if (null == o1) return -1;
-			else if (null == o2) return 1;
-			else return (((ICompletionProposal) o1).getDisplayString().compareTo(((ICompletionProposal) o2).getDisplayString()));
+
+			if (null == o1)
+				return -1;
+			else if (null == o2)
+				return 1;
+			else
+				return (((ICompletionProposal) o1).getDisplayString().compareTo(((ICompletionProposal) o2)
+						.getDisplayString()));
 		}
 	}
 }

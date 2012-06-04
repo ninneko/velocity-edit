@@ -15,7 +15,7 @@ public class MacroInstanceDirective extends AbstractDirective {
             for (int i=1; i<content.length(); i++) {
                 char c = content.charAt(i);
                 if (Character.isWhitespace(c) || c == '(') break;
-                else sb.append(c);
+				sb.append(c);
             }
             macroName = sb.toString();
         }
