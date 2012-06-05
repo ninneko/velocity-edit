@@ -14,7 +14,6 @@ import java.util.Stack;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jdt.internal.ui.text.java.JavaCompletionProposal;
-import org.eclipse.jdt.internal.ui.text.java.ParameterGuessingProposal;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -190,7 +189,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	}
 
 	@SuppressWarnings("unchecked")
-	private List<CompletionProposal> getVelocityDirectiveProposals(IFile file, IDocument doc, int anOffset) {
+	private List<ICompletionProposal> getVelocityDirectiveProposals(IFile file, IDocument doc, int anOffset) {
 		if (anOffset > 1) {
 			try {
 				if (doc.getChar(anOffset - 1) == '#') {
@@ -279,7 +278,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 			
 			testPrefix = testPrefix.toUpperCase();
 
-			List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+			List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 
 			proposals.addAll(buildMacroProposals(macroFiles, testPrefix, start, end));
 			proposals.addAll(buildKeywordsProposals(testPrefix, start, end));
@@ -291,27 +290,28 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 		}
 	}
 
-	private List<CompletionProposal> buildMacroProposals(List<VelocityFile> macroFiles, String testPrefix, int start, int end) {
-		List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+	private List<ICompletionProposal> buildMacroProposals(List<VelocityFile> macroFiles, String testPrefix, int start, int end) {
+		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		
 		for (Iterator<VelocityFile> i = macroFiles.iterator(); i.hasNext();) {
-			VelocityFile vf = (VelocityFile) i.next();
-			for (int j = 0; j < vf.getMacros().length; j++) {
-				VelocityMacro macro = vf.getMacros()[j];
+			VelocityFile macroFile = (VelocityFile) i.next();
+			for (int j = 0; j < macroFile.getMacros().length; j++) {
+				VelocityMacro macro = macroFile.getMacros()[j];
 				String name = macro.name.toUpperCase();
 				if (name.startsWith(testPrefix)) {
-					StringBuffer insert = new StringBuffer();
-					insert.append(macro.name);
-					insert.append("(");
+					StringBuffer insertString = new StringBuffer();
+					insertString.append(macro.name);
+					insertString.append("(");
 					
+					int cursorPosition = insertString.length();
 					for (int k = 0; k < macro.parameters.length; k++) {
 						if (k > 0)
-							insert.append(" ");
-						insert.append("[" + macro.parameters[k] + "]");
+							insertString.append(" ");
+						insertString.append(macro.parameters[k]);
 					}
-					insert.append(")");
+					insertString.append(")");
 
-					String buffer = insert.toString() + " - " + vf.file.getName();
+					String displayString = insertString.toString() + " - " + macroFile.file.getName();
 					
 //					StringBuffer buffer = new StringBuffer();
 //					buffer.append(macro.name);
@@ -334,9 +334,10 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 //						}
 //					}
 
-					proposals.add(new CompletionProposal(insert.toString(), start, end - start,
-							macro.name.length() + 1, Plugin.getDefault().getImage("macro"), buffer, null,
-							null));
+					Position position = new Position(start, end - start);
+					proposals.add(new VelocityTemplateProposal(insertString.toString(), position,
+							cursorPosition, Plugin.getDefault().getImage("macro"), displayString, null,
+							null, null, macro));
 				}
 			}
 		}
@@ -344,8 +345,8 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 		return proposals;
 	}
 
-	private List<CompletionProposal> buildKeywordsProposals(String testPrefix, int start, int end) {
-		List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+	private List<ICompletionProposal> buildKeywordsProposals(String testPrefix, int start, int end) {
+		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		
 		String[] directives = { "foreach", "if", "else", "end", "macro", "parse", "include", "stop", "elseif" };
 		for (int i = 0; i < directives.length; i++) {
@@ -391,8 +392,8 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 
 	private static Comparator<Object> PROPOSAL_COMPARATOR = new Comparator<Object>() {
 		public int compare(Object aProposal1, Object aProposal2) {
-			String text1 = ((CompletionProposal) aProposal1).getDisplayString();
-			String text2 = ((CompletionProposal) aProposal2).getDisplayString();
+			String text1 = ((ICompletionProposal) aProposal1).getDisplayString();
+			String text2 = ((ICompletionProposal) aProposal2).getDisplayString();
 
 			return text1.compareTo(text2);
 		}
