@@ -111,12 +111,12 @@ public class WordCompleteEngine {
 
 			String content = indexSearcher.doc(scoreDocs[i].doc).get(CONTENT_FILE_NAME);
 			String[] fragments = highlighter.getBestFragments(analyzer, CONTENT_FILE_NAME, content, MAX_MATCH_SIZE);
-			
 			for (int j = 0; j < fragments.length; j++) {
 				Matcher matcher = Pattern.compile("<B>[^(</B>)]*</B>").matcher(fragments[j]);
 				
 				while(matcher.find()) {
 					String string = matcher.group();
+					
 					string = string.substring(3, string.length() - 4);
 					if (string.equals(prefix)) {
 						continue;
@@ -125,6 +125,11 @@ public class WordCompleteEngine {
 					if (stringMap.containsKey(string)) {
 						stringMap.put(string, stringMap.get(string) + 1);
 						continue;
+					}
+					
+					// hack
+					if (string.indexOf(".") > 0) {
+						string = string.substring(0, string.indexOf("."));
 					}
 					
 					stringMap.put(string, 0);
