@@ -1,11 +1,13 @@
 package com.hudson.velocityweb.editors.velocity.completion;
 
-import org.eclipse.jdt.internal.ui.text.template.contentassist.PositionBasedCompletionProposal;
+import org.eclipse.jface.text.BadLocationException;
+import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Position;
-import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.link.LinkedModeModel;
 import org.eclipse.jface.text.link.LinkedModeUI;
@@ -17,17 +19,26 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacro;
 
-public class VelocityTemplateProposal extends PositionBasedCompletionProposal {
+public class VelocityTemplateProposal implements ICompletionProposal, ICompletionProposalExtension2 {
 	private VelocityMacro macro;
 	
 	private IRegion fSelectedRegion; // initialized by apply()
+	
+	private Position position;
+	
+	private String replaceString;
+	
+	private String displayString;
+	
+	private Image image;
 
 	public VelocityTemplateProposal(String replacementString, Position replacementPosition, int cursorPosition,
-			Image image, String displayString, IContextInformation contextInformation, String additionalProposalInfo,
-			char[] triggers, VelocityMacro macro) {
-		super(replacementString, replacementPosition, cursorPosition, image, displayString, contextInformation,
-				additionalProposalInfo, triggers);
+			Image image, String displayString, VelocityMacro macro) {
 
+		this.image = image;
+		this.replaceString = replacementString;
+		this.displayString = displayString;
+		this.position = replacementPosition;
 		this.macro = macro;
 	}
 	
@@ -41,8 +52,8 @@ public class VelocityTemplateProposal extends PositionBasedCompletionProposal {
 
 	@Override
 	public void apply(ITextViewer viewer, char trigger, int stateMask, int offset) {
-		super.apply(viewer, trigger, stateMask, offset);
-
+		apply(viewer.getDocument());
+		
 		try {
 			LinkedModeModel model = new LinkedModeModel();
 
@@ -50,7 +61,7 @@ public class VelocityTemplateProposal extends PositionBasedCompletionProposal {
 			insert.append(macro.name);
 			insert.append("(");
 
-			int parameterOffset = offset + insert.length();
+			int parameterOffset = position.offset + insert.length();
 			for (int k = 0; k < macro.parameters.length; k++) {
 				LinkedPositionGroup group = new LinkedPositionGroup();
 
@@ -76,5 +87,63 @@ public class VelocityTemplateProposal extends PositionBasedCompletionProposal {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public void apply(IDocument document) {
+		try {
+			document.replace(position.offset, position.length, replaceString);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public String getAdditionalProposalInfo() {
+		return null;
+	}
+
+	@Override
+	public String getDisplayString() {
+		return displayString;
+	}
+
+	@Override
+	public Image getImage() {
+		return image;
+	}
+
+	@Override
+	public IContextInformation getContextInformation() {
+		return null;
+	}
+
+	@Override
+	public void selected(ITextViewer viewer, boolean smartToggle) {
+	}
+
+	@Override
+	public void unselected(ITextViewer viewer) {
+	}
+
+	@Override
+	public boolean validate(IDocument document, int offset, DocumentEvent event) {
+		try {
+			String content= document.get(position.getOffset(), offset - position.getOffset());
+			
+			position.setLength(offset - position.getOffset());
+			
+			if (replaceString.startsWith(content))
+				return true;
+		} catch (BadLocationException e) {
+			// ignore concurrently modified document
+		}
+		
+		return false;
+	}
+
+	@Override
+	public int getRelevance() {
+		return 0;
 	}
 }

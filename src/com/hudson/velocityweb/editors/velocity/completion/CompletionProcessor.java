@@ -336,8 +336,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 
 					Position position = new Position(start, end - start);
 					proposals.add(new VelocityTemplateProposal(insertString.toString(), position,
-							cursorPosition, Plugin.getDefault().getImage("macro"), displayString, null,
-							null, null, macro));
+							cursorPosition, Plugin.getDefault().getImage("macro"), displayString, macro));
 				}
 			}
 		}
