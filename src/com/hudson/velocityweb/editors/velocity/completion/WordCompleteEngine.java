@@ -37,7 +37,7 @@ public class WordCompleteEngine {
 	
 	private static WordCompleteEngine INSTANCE;
 	
-	private static final int MAX_MATCH_SIZE = 50;
+	private static final int MAX_MATCH_SIZE = 30;
 
 	private Directory directory = new RAMDirectory();
 	
@@ -80,7 +80,7 @@ public class WordCompleteEngine {
 	public List<ICompletionProposal> computeProposals(IFile file, IDocument doc, String prefix, int offset, int startPos) {
 		try {
 			long currentTime = System.currentTimeMillis();
-			if (lastIndexTime + 1000*10 <= currentTime || !file.getFullPath().toPortableString().equals(lastFileName)) {
+			if (lastIndexTime + 1000*5 <= currentTime || !file.getFullPath().toPortableString().equals(lastFileName)) {
 				parseDoc(file, doc);
 				
 				lastIndexTime = currentTime;
@@ -118,6 +118,12 @@ public class WordCompleteEngine {
 					String string = matcher.group();
 					
 					string = string.substring(3, string.length() - 4);
+					
+					// hack
+					if (string.indexOf(".") > 0) {
+						string = string.substring(0, string.indexOf("."));
+					}
+					
 					if (string.equals(prefix)) {
 						continue;
 					}
@@ -125,11 +131,6 @@ public class WordCompleteEngine {
 					if (stringMap.containsKey(string)) {
 						stringMap.put(string, stringMap.get(string) + 1);
 						continue;
-					}
-					
-					// hack
-					if (string.indexOf(".") > 0) {
-						string = string.substring(0, string.indexOf("."));
 					}
 					
 					stringMap.put(string, 0);
