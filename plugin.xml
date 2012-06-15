@@ -3,7 +3,7 @@
 <plugin
    id="com.hudson.velocityweb"
    name="Velocity Web Edit"
-   version="1.5.0"
+   version="1.5.0.1"
    provider-name="Sefler"
    class="com.hudson.velocityweb.Plugin">
 
@@ -13,11 +13,6 @@
       </library>
       <library name="dtdparser121.jar">
          <export name="*"/>
-      </library>
-      <library name="bin/">
-         <export
-               name="*">
-         </export>
       </library>
       <library name="."/>
       <library name="commons-lang3-3.1.jar">
@@ -53,7 +48,6 @@
       <import plugin="org.eclipse.jface.text"/>
       <import plugin="org.eclipse.ui.editors"/>
       <import plugin="org.eclipse.ui.workbench.texteditor"/>
-      <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.eclipse.ui.ide"/>
       <import plugin="org.eclipse.jdt.ui"/>
