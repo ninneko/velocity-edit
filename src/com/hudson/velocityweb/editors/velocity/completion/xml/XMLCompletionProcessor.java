@@ -41,8 +41,8 @@ public class XMLCompletionProcessor {
 	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset, IFile file) {
 		IDocument doc = viewer.getDocument();
 		CursorState cursorState = CursorState.getCursorState(doc, offset);
-		Node currentNode = cursorState.getCurrentNode();
-		if (null == currentNode) {
+		Node currentNode = null;
+//		if (null == currentNode) {
 			try {
 				for (int i = offset - 1; i >= 0; i--) {
 					char c = doc.getChar(i);
@@ -58,7 +58,8 @@ public class XMLCompletionProcessor {
 				}
 			} catch (BadLocationException e) {
 			}
-		}
+//		}
+		
 		if (null != currentNode) {
 			try {
 				int state = currentNode.getState(offset);

@@ -148,7 +148,9 @@ public class Editor extends TextEditor implements ITextListener, MouseListener, 
 	}
 
 	public void mouseUp(MouseEvent e) {
-		outlinePage.select(getCursorOffset());
+		if (outlinePage != null) {
+			outlinePage.select(getCursorOffset());
+		}
 	}
 
 	public int getCursorOffset() {
