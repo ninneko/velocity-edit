@@ -84,7 +84,7 @@ public class XMLCompletionProcessor {
 							} catch (BadLocationException e) {
 							}
 							return new ICompletionProposal[] { new CompletionProposal(actual,
-									currentNode.getNameStart() + 1, endIndex - currentNode.getNameStart(),
+									currentNode.getNameStart(), endIndex - currentNode.getNameStart(),
 									actual.length(), null, text, null, null) };
 						}
 

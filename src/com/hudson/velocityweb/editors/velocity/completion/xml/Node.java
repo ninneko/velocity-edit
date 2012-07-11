@@ -195,7 +195,7 @@ public class Node {
 		this.name = sb.toString();
 		if (sb.length() == 0) {
 			state = CursorState.STATE_WAITING_FOR_NODE_NAME;
-			nameStart = offsetStart;
+			nameStart = offsetEnd;
 		}
 		else if (encounteredSpace) state = CursorState.STATE_WAITING_FOR_ATTRIBUTE_NAME;
 		else state = CursorState.STATE_NODE_NAME;
