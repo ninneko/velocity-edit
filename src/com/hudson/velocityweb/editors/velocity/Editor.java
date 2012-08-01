@@ -60,7 +60,7 @@ public class Editor extends TextEditor implements ITextListener, MouseListener, 
 	public Editor() {
 		super();
 		colorManager = new ColorManager();
-		setSourceViewerConfiguration(new Configuration(colorManager, this));
+		setSourceViewerConfiguration(new Configuration(colorManager, this, 200));
 		setDocumentProvider(new DocumentProvider());
 	}
 
@@ -69,7 +69,7 @@ public class Editor extends TextEditor implements ITextListener, MouseListener, 
 		colorManager.dispose();
 		super.dispose();
 	}
-
+	
 	public ITextViewer getViewer() {
 		return getSourceViewer();
 	}

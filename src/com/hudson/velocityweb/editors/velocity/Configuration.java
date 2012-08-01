@@ -2,7 +2,9 @@ package com.hudson.velocityweb.editors.velocity;
 
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextDoubleClickStrategy;
+import org.eclipse.jface.text.IUndoManager;
 import org.eclipse.jface.text.TextAttribute;
+import org.eclipse.jface.text.TextViewerUndoManager;
 import org.eclipse.jface.text.contentassist.ContentAssistant;
 import org.eclipse.jface.text.contentassist.IContentAssistant;
 import org.eclipse.jface.text.presentation.IPresentationReconciler;
@@ -23,11 +25,18 @@ public class Configuration extends SourceViewerConfiguration {
 	private XMLTagScanner tagScanner;
 	private Scanner scanner;
 	private Editor editor;
+	private int unDoLimit;
 
-	public Configuration(ColorManager colorManager, Editor editor) {
+	public void setUnDoLimit(int unDoLimit) {
+		this.unDoLimit = unDoLimit;
+	}
+	
+	public Configuration(ColorManager colorManager, Editor editor, int unDoLimit) {
 		this.editor = editor;
 		this.colorManager = colorManager;
+		this.unDoLimit = unDoLimit;
 	}
+	
 	public String[] getConfiguredContentTypes(ISourceViewer sourceViewer) {
 		return new String[] {
 			IDocument.DEFAULT_CONTENT_TYPE,
@@ -192,6 +201,11 @@ public class Configuration extends SourceViewerConfiguration {
 		assistant.setAutoActivationDelay(Plugin.getDefault().getPreferenceStore()
 				.getInt(MainPreferences.AUTO_COMPLETE_DEPLAY));
         return assistant;
+    }
+    
+    @Override
+    public IUndoManager getUndoManager(ISourceViewer sourceViewer) {
+    	return new TextViewerUndoManager(unDoLimit);
     }
     
 	public IAnnotationHover getAnnotationHover(ISourceViewer sourceViewer) {

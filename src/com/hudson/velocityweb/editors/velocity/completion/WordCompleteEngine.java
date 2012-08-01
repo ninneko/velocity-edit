@@ -101,7 +101,7 @@ public class WordCompleteEngine {
 		queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
 		Query query = queryParser.parse(prefix + "*");
 		
-		Map<String, Integer> stringMap = new TreeMap<String, Integer>();
+		Map<String, Integer> occurenceCountMap = new TreeMap<String, Integer>();
 		
 		TopDocs hitDocs = indexSearcher.search(query, 20);
 		ScoreDoc[] scoreDocs = hitDocs.scoreDocs;
@@ -128,18 +128,18 @@ public class WordCompleteEngine {
 						continue;
 					}
 					
-					if (stringMap.containsKey(string)) {
-						stringMap.put(string, stringMap.get(string) + 1);
+					if (occurenceCountMap.containsKey(string)) {
+						occurenceCountMap.put(string, occurenceCountMap.get(string) + 1);
 						continue;
 					}
 					
-					stringMap.put(string, 0);
+					occurenceCountMap.put(string, 0);
 				}
 			}
 		}
 		
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
-		for (String string : stringMap.keySet()) {
+		for (String string : occurenceCountMap.keySet()) {
 //			proposals.add(new CompletionProposal(
 //					string,
 //					startPos,
@@ -152,7 +152,7 @@ public class WordCompleteEngine {
 //					.getDefault().getImage("wc"), string, null, null, null);
 //			Position position = new Position(startPos, offset - startPos);
 			JavaCompletionProposal proposal = new JavaCompletionProposal(string, startPos, offset - startPos, Plugin
-					.getDefault().getImage("wc"), string, 200 + stringMap.get(string));
+					.getDefault().getImage("wc"), string, 200 + occurenceCountMap.get(string));
 
 //			proposal.setRelevance(200 + stringMap.get(string));
 			proposals.add(proposal);
