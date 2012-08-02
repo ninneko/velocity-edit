@@ -2,12 +2,15 @@ package com.hudson.velocityweb.editors.velocity.completion;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -102,6 +105,7 @@ public class WordCompleteEngine {
 		Query query = queryParser.parse(prefix + "*");
 		
 		Map<String, Integer> occurenceCountMap = new TreeMap<String, Integer>();
+		Map<String, String> stringIndexMap = new HashMap<String, String>();
 		
 		TopDocs hitDocs = indexSearcher.search(query, 20);
 		ScoreDoc[] scoreDocs = hitDocs.scoreDocs;
@@ -110,10 +114,15 @@ public class WordCompleteEngine {
 			Highlighter highlighter = new Highlighter(scorer);
 
 			String content = indexSearcher.doc(scoreDocs[i].doc).get(CONTENT_FILE_NAME);
+			
+//			content = content.replace("\r", "");
+//			content = content.replace("\n", "");
+			
 			String[] fragments = highlighter.getBestFragments(analyzer, CONTENT_FILE_NAME, content, MAX_MATCH_SIZE);
 			for (int j = 0; j < fragments.length; j++) {
 				Matcher matcher = Pattern.compile("<B>[^(</B>)]*</B>").matcher(fragments[j]);
 				
+				int offsetInDoc = 0;
 				while(matcher.find()) {
 					String string = matcher.group();
 					
@@ -124,12 +133,20 @@ public class WordCompleteEngine {
 						string = string.substring(0, string.indexOf("."));
 					}
 					
+					offsetInDoc = fragments[j].indexOf(string, offsetInDoc);
+					if (stringIndexMap.get(string) != null) {
+						stringIndexMap.put(string, stringIndexMap.get(string) + ":" + offsetInDoc);
+					} else {
+						stringIndexMap.put(string, String.valueOf(offsetInDoc));
+					}
+					offsetInDoc += string.length();
+					
 					if (string.equals(prefix)) {
 						continue;
 					}
 					
 					if (occurenceCountMap.containsKey(string)) {
-						occurenceCountMap.put(string, occurenceCountMap.get(string) + 1);
+						occurenceCountMap.put(string, occurenceCountMap.get(string) + 10);
 						continue;
 					}
 					
@@ -137,6 +154,8 @@ public class WordCompleteEngine {
 				}
 			}
 		}
+		
+		computeClusteringScore(stringIndexMap, occurenceCountMap);
 		
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		for (String string : occurenceCountMap.keySet()) {
@@ -172,6 +191,77 @@ public class WordCompleteEngine {
 //		}
 //		
 //		termEnum.close();
+	}
+
+	private int clusterIntervalSpace = 30;
+	
+	private void computeClusteringScore(Map<String, String> stringIndexMap, Map<String, Integer> occurenceCountMap) {
+		Map<String, Integer> clusterCountMap = new TreeMap<String, Integer>();
+		int smallestClusterIntervalSpace = Integer.MAX_VALUE;
+		for (String matchedString : occurenceCountMap.keySet()) {
+//			int largestIndex = 0;
+			String[] indexes = stringIndexMap.get(matchedString).split(":");
+			
+			int clusterCount = 0;
+			int lastIndex = 0;
+			int largestCluster = 0;
+			for (int i = 0; i < indexes.length; i++) {
+				int index = NumberUtils.toInt(indexes[i], 0);
+				int intervalSpace = index - lastIndex;
+				if (intervalSpace < clusterIntervalSpace) {
+					clusterCount++;
+					
+					if (smallestClusterIntervalSpace > intervalSpace) {
+						smallestClusterIntervalSpace = intervalSpace;
+					}
+					
+				} else {
+					largestCluster = clusterCount;
+					clusterCount = 0;
+				} 
+
+				lastIndex = index;
+			}
+			
+			if (clusterCount > largestCluster) {
+				largestCluster = clusterCount;
+			}
+			
+//			
+//			// the first one is alway 0, so minus 1
+//			avg /= indexes.length;
+//			
+//			int variance = 0;
+//			for (int i = 0; i < indexes.length; i++) {
+//				int currentIndex = NumberUtils.toInt(indexes[i], 0);
+////				if ((currentIndex > largestIndex)) {
+////					largestIndex = currentIndex;
+////				}
+//				
+//				variance += Math.pow((currentIndex - avg), 2); 
+//			}
+//			
+//			variance /= indexes.length;
+//
+			clusterIntervalSpace = smallestClusterIntervalSpace*5;
+			
+			clusterCountMap.put(matchedString, largestCluster);
+		}
+
+//		int count = 0;
+		for (String matchedString : clusterCountMap.keySet()) {
+			if (occurenceCountMap.get(matchedString) < 3) {
+				// Occurrence smaller than 3 need not to participate in cluster computing
+				continue;
+			}
+			
+			occurenceCountMap.put(matchedString, clusterCountMap.get(matchedString)*5);
+//			
+//			if (++count > 10) {
+//				break;
+//			}
+		}
+		
 	}
 
 	private void parseDoc(IFile file, IDocument doc) throws Exception {

@@ -3,7 +3,7 @@
 <plugin
    id="com.hudson.velocityweb"
    name="Velocity Edit"
-   version="1.5.1"
+   version="1.5.3"
    provider-name="Sefler"
    class="com.hudson.velocityweb.Plugin">
 
