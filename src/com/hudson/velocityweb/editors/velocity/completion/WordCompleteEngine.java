@@ -177,14 +177,14 @@ public class WordCompleteEngine {
 			for (int i = 0; i < indexes.length; i++) {
 				int index = NumberUtils.toInt(indexes[i], 0);
 				int intervalSpace = index - lastIndex;
-				if (intervalSpace < clusterIntervalSpace) {
+				if (intervalSpace < clusterIntervalSpace || lastIndex == 0) {
 					clusterCount++;
 					
 					if (smallestClusterIntervalSpace > intervalSpace) {
 						smallestClusterIntervalSpace = intervalSpace;
 					}
 				} else {
-					largestCluster = clusterCount;
+					largestCluster = ++clusterCount;
 					clusterCount = 0;
 				} 
 
@@ -195,13 +195,13 @@ public class WordCompleteEngine {
 				largestCluster = clusterCount;
 			}
 
-			clusterIntervalSpace = smallestClusterIntervalSpace*CLUSTER_RANGE_FACTOR;
-			
 			clusterCountMap.put(matchedString, largestCluster);
 		}
 
+		clusterIntervalSpace = smallestClusterIntervalSpace*CLUSTER_RANGE_FACTOR;
+		
 		for (String matchedString : clusterCountMap.keySet()) {
-			if (occurenceCountMap.get(matchedString) < 3) {
+			if (clusterCountMap.get(matchedString) <= 3) {
 				// Occurrence smaller than 3 need not to participate in cluster computing
 				continue;
 			}
