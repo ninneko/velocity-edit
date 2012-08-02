@@ -21,7 +21,6 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.store.Directory;
@@ -37,6 +36,10 @@ import com.hudson.velocityweb.Plugin;
 
 public class WordCompleteEngine {
 	
+	private static final int CLUSTER_SCORE_FACTOR = 5;
+
+	private static final int CLUSTER_RANGE_FACTOR = 5;
+
 	private static WordCompleteEngine INSTANCE;
 	
 	private static final int MAX_MATCH_SIZE = 30;
@@ -96,6 +99,9 @@ public class WordCompleteEngine {
 	}
 
 	private List<ICompletionProposal> computeProposals(String prefix, String fileID, int offset, int startPos) throws Exception {
+		Map<String, Integer> occurenceCountMap = new TreeMap<String, Integer>();
+		Map<String, String> IndexPositionsMap = new HashMap<String, String>();
+		
 		IndexReader indexReader = IndexReader.open(directory);
 		IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 		
@@ -103,93 +109,58 @@ public class WordCompleteEngine {
 		queryParser.setDefaultOperator(QueryParser.AND_OPERATOR);
 		Query query = queryParser.parse(prefix + "*");
 		
-		Map<String, Integer> occurenceCountMap = new TreeMap<String, Integer>();
-		Map<String, String> stringIndexMap = new HashMap<String, String>();
+		Highlighter highlighter = new Highlighter(new QueryScorer(query, indexReader, CONTENT_FILE_NAME));
 		
-		TopDocs hitDocs = indexSearcher.search(query, 20);
-		ScoreDoc[] scoreDocs = hitDocs.scoreDocs;
-		for (int i = 0; i < scoreDocs.length; i++) {
-			QueryScorer scorer = new QueryScorer(query, indexReader, CONTENT_FILE_NAME);
-			Highlighter highlighter = new Highlighter(scorer);
-
-			String content = indexSearcher.doc(scoreDocs[i].doc).get(CONTENT_FILE_NAME);
-			
-//			content = content.replace("\r", "");
-//			content = content.replace("\n", "");
-			
+		ScoreDoc[] scoreDocs = indexSearcher.search(query, 20).scoreDocs;
+		for (int scoreDocsIndex = 0; scoreDocsIndex < scoreDocs.length; scoreDocsIndex++) {
+			String content = indexSearcher.doc(scoreDocs[scoreDocsIndex].doc).get(CONTENT_FILE_NAME);
 			String[] fragments = highlighter.getBestFragments(analyzer, CONTENT_FILE_NAME, content, MAX_MATCH_SIZE);
-			for (int j = 0; j < fragments.length; j++) {
-				Matcher matcher = Pattern.compile("<B>[^(</B>)]*</B>").matcher(fragments[j]);
+			for (int fragIndex = 0; fragIndex < fragments.length; fragIndex++) {
+				Matcher matcher = Pattern.compile("<B>[^(</B>)]*</B>").matcher(fragments[fragIndex]);
 				
-				int offsetInDoc = 0;
+				int offsetInFragment = 0;
 				while(matcher.find()) {
 					String string = matcher.group();
+					string = string.substring("<B>".length(), string.length() - "</B>".length());
 					
-					string = string.substring(3, string.length() - 4);
-					
-					// hack
+					// hack, don't want xxx.getxxx come out
 					if (string.indexOf(".") > 0) {
 						string = string.substring(0, string.indexOf("."));
 					}
 					
-					offsetInDoc = fragments[j].indexOf(string, offsetInDoc);
-					if (stringIndexMap.get(string) != null) {
-						stringIndexMap.put(string, stringIndexMap.get(string) + ":" + offsetInDoc);
+					offsetInFragment = fragments[fragIndex].indexOf(string, offsetInFragment);
+					if (IndexPositionsMap.get(string) == null) {
+						IndexPositionsMap.put(string, "" + offsetInFragment);
 					} else {
-						stringIndexMap.put(string, String.valueOf(offsetInDoc));
+						IndexPositionsMap.put(string, IndexPositionsMap.get(string) + ":" + offsetInFragment);
 					}
-					offsetInDoc += string.length();
-					
+					offsetInFragment += string.length();
+
+					// ignore the string itself
 					if (string.equals(prefix)) {
 						continue;
 					}
 					
 					if (occurenceCountMap.containsKey(string)) {
 						occurenceCountMap.put(string, occurenceCountMap.get(string) + 10);
-						continue;
+					} else {
+						occurenceCountMap.put(string, 0);
 					}
-					
-					occurenceCountMap.put(string, 0);
 				}
 			}
 		}
 		
-		computeClusteringScore(stringIndexMap, occurenceCountMap);
+		computeClusteringScore(IndexPositionsMap, occurenceCountMap);
 		
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		for (String string : occurenceCountMap.keySet()) {
-//			proposals.add(new CompletionProposal(
-//					string,
-//					startPos,
-//					offset - startPos,
-//					string.length(),
-//					Plugin.getDefault().getImage("wc"), string, null, null));
-			
-//			Position position = new Position(startPos, offset - startPos);
-//			JavaCompletionProposal proposal = new JavaCompletionProposal(string, position, string.length(), Plugin
-//					.getDefault().getImage("wc"), string, null, null, null);
-//			Position position = new Position(startPos, offset - startPos);
 			JavaCompletionProposal proposal = new JavaCompletionProposal(string, startPos, offset - startPos, Plugin
 					.getDefault().getImage("wc"), string, 200 + occurenceCountMap.get(string));
 
-//			proposal.setRelevance(200 + stringMap.get(string));
 			proposals.add(proposal);
 		}
 		
 		return proposals;
-//		Term t = new Term(fieldName, prefix);
-//		TermEnum termEnum = new PrefixTermEnum(indexReader, t);
-//		List<String> matchedStrings = new ArrayList<String>();
-//		while (termEnum.next()) {
-//			Term term = termEnum.term();
-//			matchedStrings.add(term.text());
-//			
-//			if (matchedStrings.size() > MAX_MATCH_SIZE) {
-//				break;
-//			}
-//		}
-//		
-//		termEnum.close();
 	}
 
 	private int clusterIntervalSpace = 30;
@@ -198,7 +169,6 @@ public class WordCompleteEngine {
 		Map<String, Integer> clusterCountMap = new TreeMap<String, Integer>();
 		int smallestClusterIntervalSpace = Integer.MAX_VALUE;
 		for (String matchedString : occurenceCountMap.keySet()) {
-//			int largestIndex = 0;
 			String[] indexes = stringIndexMap.get(matchedString).split(":");
 			
 			int clusterCount = 0;
@@ -213,7 +183,6 @@ public class WordCompleteEngine {
 					if (smallestClusterIntervalSpace > intervalSpace) {
 						smallestClusterIntervalSpace = intervalSpace;
 					}
-					
 				} else {
 					largestCluster = clusterCount;
 					clusterCount = 0;
@@ -225,42 +194,20 @@ public class WordCompleteEngine {
 			if (clusterCount > largestCluster) {
 				largestCluster = clusterCount;
 			}
-			
-//			
-//			// the first one is alway 0, so minus 1
-//			avg /= indexes.length;
-//			
-//			int variance = 0;
-//			for (int i = 0; i < indexes.length; i++) {
-//				int currentIndex = NumberUtils.toInt(indexes[i], 0);
-////				if ((currentIndex > largestIndex)) {
-////					largestIndex = currentIndex;
-////				}
-//				
-//				variance += Math.pow((currentIndex - avg), 2); 
-//			}
-//			
-//			variance /= indexes.length;
-//
-			clusterIntervalSpace = smallestClusterIntervalSpace*5;
+
+			clusterIntervalSpace = smallestClusterIntervalSpace*CLUSTER_RANGE_FACTOR;
 			
 			clusterCountMap.put(matchedString, largestCluster);
 		}
 
-//		int count = 0;
 		for (String matchedString : clusterCountMap.keySet()) {
 			if (occurenceCountMap.get(matchedString) < 3) {
 				// Occurrence smaller than 3 need not to participate in cluster computing
 				continue;
 			}
 			
-			occurenceCountMap.put(matchedString, clusterCountMap.get(matchedString)*5);
-//			
-//			if (++count > 10) {
-//				break;
-//			}
+			occurenceCountMap.put(matchedString, clusterCountMap.get(matchedString)*CLUSTER_SCORE_FACTOR);
 		}
-		
 	}
 
 	private void parseDoc(IFile file, IDocument doc) throws Exception {
