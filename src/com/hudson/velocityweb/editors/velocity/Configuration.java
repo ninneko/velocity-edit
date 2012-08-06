@@ -24,17 +24,28 @@ public class Configuration extends SourceViewerConfiguration {
 	private ColorManager colorManager;
 	private XMLTagScanner tagScanner;
 	private Scanner scanner;
-	private Editor editor;
+	private VelocityEditor editor;
 	private int unDoLimit;
 
 	public void setUnDoLimit(int unDoLimit) {
 		this.unDoLimit = unDoLimit;
 	}
 	
-	public Configuration(ColorManager colorManager, Editor editor, int unDoLimit) {
+	public Configuration(ColorManager colorManager, VelocityEditor editor, int unDoLimit) {
 		this.editor = editor;
 		this.colorManager = colorManager;
 		this.unDoLimit = unDoLimit;
+	}
+	
+	/**
+	 * get comment prefixes, this is fo toggle comment action
+	 * 
+	 * @param sourceViewer
+	 * @param contentType
+	 * @return
+	 */
+	public String[] getDefaultPrefixes(ISourceViewer sourceViewer, String contentType) {
+		return new String[] {"##"};
 	}
 	
 	public String[] getConfiguredContentTypes(ISourceViewer sourceViewer) {

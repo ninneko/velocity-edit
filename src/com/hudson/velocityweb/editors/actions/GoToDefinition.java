@@ -14,7 +14,7 @@ import org.eclipse.ui.texteditor.ITextEditor;
 
 import com.hudson.velocityweb.Plugin;
 import com.hudson.velocityweb.css.CSSFile;
-import com.hudson.velocityweb.editors.velocity.Editor;
+import com.hudson.velocityweb.editors.velocity.VelocityEditor;
 import com.hudson.velocityweb.editors.velocity.PartitionScanner;
 import com.hudson.velocityweb.editors.velocity.completion.Attribute;
 import com.hudson.velocityweb.editors.velocity.completion.DirectiveFactory;
@@ -32,13 +32,13 @@ import com.hudson.velocityweb.util.EditorUtil;
  */
 public class GoToDefinition  implements IEditorActionDelegate {
 
-	private Editor editor;
+	private VelocityEditor editor;
 	private int offset;
 	
 	public void setActiveEditor(IAction arg0, IEditorPart arg1) {
-		if (arg1 instanceof Editor) {
+		if (arg1 instanceof VelocityEditor) {
 			arg0.setEnabled(true);
-			this.editor = (Editor) arg1;
+			this.editor = (VelocityEditor) arg1;
 		}
 		else {
 			arg0.setEnabled(false);

@@ -51,7 +51,7 @@ public class VelocityMultiPageEditor extends MultiPageEditorPart {
     OleControlSite controlSiteView;
     OleFrame frameView;
     OleAutomation automationView;
-    private Editor vEditor;
+    private VelocityEditor vEditor;
 
     static String currentProject;
     static Map projectClassLoaders = new HashMap();
@@ -66,7 +66,7 @@ public class VelocityMultiPageEditor extends MultiPageEditorPart {
     void createPage0()
     {
         try {
-            vEditor = new Editor();
+            vEditor = new VelocityEditor();
             int index = addPage(vEditor, getEditorInput());
             setPageText(index, "Source");
             setPartName(vEditor.getTitle());
@@ -76,7 +76,7 @@ public class VelocityMultiPageEditor extends MultiPageEditorPart {
         }
     }
 
-    public Editor getEditor () {
+    public VelocityEditor getEditor () {
     	return vEditor;
     }
 

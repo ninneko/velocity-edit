@@ -14,6 +14,8 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
+import org.eclipse.jdt.internal.ui.javaeditor.ToggleCommentAction;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
@@ -32,8 +34,9 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.editors.text.TextEditor;
+import org.eclipse.ui.editors.text.ITextEditorHelpContextIds;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
 import org.eclipse.ui.texteditor.ContentAssistAction;
 import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
@@ -49,7 +52,7 @@ import com.hudson.velocityweb.editors.velocity.outline.OutlinePage;
 import com.hudson.velocityweb.manager.ConfigurationManager;
 import com.hudson.velocityweb.util.EditorUtil;
 
-public class Editor extends TextEditor implements ITextListener, MouseListener, KeyListener, FocusListener {
+public class VelocityEditor extends AbstractDecoratedTextEditor implements ITextListener, MouseListener, KeyListener, FocusListener {
 
 	private ColorManager colorManager;
 	private long nextAllowedValidation = Long.MIN_VALUE;
@@ -57,7 +60,7 @@ public class Editor extends TextEditor implements ITextListener, MouseListener, 
 	private boolean WAITING_VALIDATION = false;
 	private boolean VALIDATING = false;
 
-	public Editor() {
+	public VelocityEditor() {
 		super();
 		colorManager = new ColorManager();
 		setSourceViewerConfiguration(new Configuration(colorManager, this, 200));
@@ -70,8 +73,15 @@ public class Editor extends TextEditor implements ITextListener, MouseListener, 
 		super.dispose();
 	}
 	
-	public ITextViewer getViewer() {
-		return getSourceViewer();
+	@Override
+	protected void initializeEditor() {
+		super.initializeEditor();
+		
+		setEditorContextMenuId("#VelocityEditorContext"); //$NON-NLS-1$
+		setRulerContextMenuId("#VelocityEditorRulerContext"); //$NON-NLS-1$
+		setHelpContextId(ITextEditorHelpContextIds.TEXT_EDITOR);
+		configureInsertMode(SMART_INSERT, true);
+		setInsertMode(INSERT);
 	}
 
 	private OutlinePage outlinePage;
@@ -96,6 +106,15 @@ public class Editor extends TextEditor implements ITextListener, MouseListener, 
 				.setActionDefinitionId(ITextEditorActionDefinitionIds.CONTENT_ASSIST_PROPOSALS);
 		setAction("Velocity.ContentAssist", action);
 		action.setEnabled(true);
+		
+		// add toggle comment action
+		ToggleCommentAction toggleCommentAction = new ToggleCommentAction(Plugin
+				.getDefault().getResourceBundle(),
+				"VelocityEditor.ToggleComment", this);
+		toggleCommentAction.configure(getSourceViewer(), getSourceViewerConfiguration());
+		
+		setAction("Velocity.ToggleComment", toggleCommentAction );
+		toggleCommentAction.setEnabled(true);
 	}
 
 	public void createPartControl(Composite parent) {
@@ -113,15 +132,17 @@ public class Editor extends TextEditor implements ITextListener, MouseListener, 
 	public IProject getProject() {
 		if (getEditorInput() instanceof FileEditorInput) {
 			return ((FileEditorInput) getEditorInput()).getFile().getProject();
-		} else
-			return null;
+		}
+		
+		return null;
 	}
 
 	public IFile getFile() {
 		if (getEditorInput() instanceof FileEditorInput) {
 			return ((FileEditorInput) getEditorInput()).getFile();
-		} else
-			return null;
+		}
+		
+		return null;
 	}
 
 	/**
@@ -651,5 +672,9 @@ public class Editor extends TextEditor implements ITextListener, MouseListener, 
 						}
 					});
 		}
+	}
+	
+	public ITextViewer getViewer() {
+		return getSourceViewer();
 	}
 }

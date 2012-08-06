@@ -4,7 +4,7 @@
    id="com.hudson.velocityweb"
    name="Velocity Edit"
    version="1.5.3"
-   provider-name="Sefler"
+   provider-name="Sefler Zhou email: sefler@126.com"
    class="com.hudson.velocityweb.Plugin">
 
    <runtime>
@@ -53,6 +53,7 @@
       <import plugin="org.eclipse.jdt.ui"/>
       <import plugin="org.eclipse.debug.core"/>
       <import plugin="org.eclipse.ui.views"/>
+      <import plugin="org.eclipse.core.resources"/>
    </requires>
 
    <extension
@@ -88,7 +89,7 @@
 
 	<extension point="org.eclipse.ui.popupMenus">
       <viewerContribution
-            targetID="#TextEditorContext"
+            targetID="#VelocityEditorContext"
             id="com.hudson.velocityweb.editors.viewContributionText">
          <action
                icon="icons/include.gif"
@@ -98,6 +99,61 @@
                menubarPath="additions"
                id="com.hudson.velocityweb.editors.actions.GoToDefinition">
          </action>
-		</viewerContribution> 
+         <menu
+               id="velocityEditorContextMenu"
+               label="Sources">
+            <groupMarker
+                  name="additions">
+            </groupMarker>
+         </menu>
+         <action
+               class="com.hudson.velocityweb.editors.actions.ToggleComment"
+               definitionId="com.hudson.velocityweb.editor.toggleCommentCommand"
+               id="com.hudson.velocityweb.editor.context.toggleComment"
+               label="Toggle Comment"
+               menubarPath="velocityEditorContextMenu/additions"
+               state="true"
+               style="push"
+               tooltip="Toggle comment for selected lines">
+         </action>
+		</viewerContribution>
 	</extension>
+ <extension
+       point="org.eclipse.ui.editorActions">
+    <editorContribution
+          id="com.hudson.velocityweb.menu.contributor"
+          targetID="com.hudson.velocityweb.editors.velocity.VelocityMultiPageEditor">
+       <action
+             class="com.hudson.velocityweb.editors.actions.ToggleComment"
+             definitionId="com.hudson.velocityweb.editor.toggleCommentCommand"
+             id="com.hudson.velocityweb.editor.toggleComment"
+             label="Toggle Comment"
+             menubarPath="velocityEditorMenu/additions"
+             style="push"
+             tooltip="Toggle comment for selected lines">
+       </action>
+       <menu
+             id="velocityEditorMenu"
+             label="Sources">
+          <groupMarker
+                name="additions">
+          </groupMarker>
+       </menu>
+    </editorContribution>
+ </extension>
+ <extension
+       point="org.eclipse.ui.bindings">
+    <key
+          commandId="com.hudson.velocityweb.editor.toggleCommentCommand"
+          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+          sequence="M1+/">
+    </key>
+ </extension>
+ <extension
+       point="org.eclipse.ui.commands">
+    <command
+          id="com.hudson.velocityweb.editor.toggleCommentCommand"
+          name="com.hudson.velocityweb.editor.toggleCommentCommand">
+    </command>
+ </extension>
 </plugin>

@@ -24,7 +24,7 @@ import org.eclipse.ui.views.contentoutline.ContentOutlinePage;
 
 import com.hudson.velocityweb.Plugin;
 import com.hudson.velocityweb.dialogs.NodeFilterDialog;
-import com.hudson.velocityweb.editors.velocity.Editor;
+import com.hudson.velocityweb.editors.velocity.VelocityEditor;
 import com.hudson.velocityweb.editors.velocity.completion.DirectiveFactory;
 import com.hudson.velocityweb.editors.velocity.completion.IDirective;
 import com.hudson.velocityweb.editors.velocity.completion.xml.CursorState;
@@ -34,14 +34,14 @@ import com.hudson.velocityweb.manager.ConfigurationManager;
 
 public class OutlinePage extends ContentOutlinePage implements MouseListener {
 	ISourceViewer sourceViewer;
-	Editor editor;
+	VelocityEditor editor;
 	
 	private Action toggleViewAction;
 	private Action filterAction;
 	boolean isShowVelocity = true;
 	
 	
-	public OutlinePage (ISourceViewer sourceViewer, Editor editor) {
+	public OutlinePage (ISourceViewer sourceViewer, VelocityEditor editor) {
 		this.sourceViewer = sourceViewer;
 		this.editor = editor;
 	}

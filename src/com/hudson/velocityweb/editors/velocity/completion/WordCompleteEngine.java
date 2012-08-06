@@ -34,6 +34,11 @@ import org.wltea.analyzer.lucene.IKAnalyzer;
 
 import com.hudson.velocityweb.Plugin;
 
+/**
+ * @author xuanyin.zy E-mail:xuanyin.zy@taobao.com
+ * @version 1.0
+ * @since Aug 6, 2012 5:50:26 PM
+ */
 public class WordCompleteEngine {
 	
 	private static final int CLUSTER_SCORE_FACTOR = 5;

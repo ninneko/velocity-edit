@@ -29,7 +29,7 @@ import org.eclipse.jface.text.templates.TemplateContextType;
 import org.eclipse.swt.graphics.Image;
 
 import com.hudson.velocityweb.Plugin;
-import com.hudson.velocityweb.editors.velocity.Editor;
+import com.hudson.velocityweb.editors.velocity.VelocityEditor;
 import com.hudson.velocityweb.editors.velocity.completion.xml.XMLCompletionProcessor;
 import com.hudson.velocityweb.editors.velocity.parser.VelocityFile;
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacro;
@@ -38,10 +38,10 @@ import com.hudson.velocityweb.manager.ConfigurationManager;
 
 public class CompletionProcessor extends TemplateCompletionProcessor implements IContentAssistProcessor {
 
-	private Editor editor;
+	private VelocityEditor editor;
 	private XMLCompletionProcessor xmlCompletionProcessor;
 
-	public CompletionProcessor(Editor editor) {
+	public CompletionProcessor(VelocityEditor editor) {
 		this.editor = editor;
 		this.xmlCompletionProcessor = new XMLCompletionProcessor(editor.getFile());
 	}
