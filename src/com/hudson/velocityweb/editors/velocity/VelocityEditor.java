@@ -14,7 +14,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.internal.ui.javaeditor.CompilationUnitEditor;
 import org.eclipse.jdt.internal.ui.javaeditor.ToggleCommentAction;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
@@ -34,6 +33,8 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.editors.text.ITextEditorHelpContextIds;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.texteditor.AbstractDecoratedTextEditor;
@@ -152,7 +153,7 @@ public class VelocityEditor extends AbstractDecoratedTextEditor implements IText
 		validateInput(true);
 		super.editorSaved();
 	}
-
+	
 	public IRegion getRegion(int offset) throws BadLocationException {
 		try {
 			return getSourceViewer().getDocument().getPartition(offset-1);
@@ -277,6 +278,10 @@ public class VelocityEditor extends AbstractDecoratedTextEditor implements IText
 
 	public void focusGained(FocusEvent e) {
 		ConfigurationManager.getInstance(getProject()).clearProjectClassLoader();
+		
+		IContextService contextService = (IContextService)PlatformUI.getWorkbench()
+				.getService(IContextService.class);
+		contextService.activateContext("com.hudson.velocityweb.velocityContext");
 	}
 
 	public void focusLost(FocusEvent e) {

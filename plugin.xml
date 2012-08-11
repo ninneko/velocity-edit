@@ -108,7 +108,7 @@
          </menu>
          <action
                class="com.hudson.velocityweb.editors.actions.ToggleComment"
-               definitionId="com.hudson.velocityweb.editor.toggleCommentCommand"
+               definitionId="Velocity Toggle Comment"
                id="com.hudson.velocityweb.editor.context.toggleComment"
                label="Toggle Comment"
                menubarPath="velocityEditorContextMenu/additions"
@@ -145,6 +145,7 @@
        point="org.eclipse.ui.bindings">
     <key
           commandId="com.hudson.velocityweb.editor.toggleCommentCommand"
+          contextId="com.hudson.velocityweb.velocityContext"
           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
           sequence="M1+/">
     </key>
@@ -153,7 +154,14 @@
        point="org.eclipse.ui.commands">
     <command
           id="com.hudson.velocityweb.editor.toggleCommentCommand"
-          name="com.hudson.velocityweb.editor.toggleCommentCommand">
+          name="Toggle Comment Command">
     </command>
+ </extension>
+ <extension
+       point="org.eclipse.ui.contexts">
+    <context
+          id="com.hudson.velocityweb.velocityContext"
+          name="Editing Velocity sources">
+    </context>
  </extension>
 </plugin>
