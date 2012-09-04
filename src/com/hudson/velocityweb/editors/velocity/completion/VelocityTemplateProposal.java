@@ -1,5 +1,6 @@
 package com.hudson.velocityweb.editors.velocity.completion;
 
+import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
@@ -19,7 +20,7 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacro;
 
-public class VelocityTemplateProposal implements ICompletionProposal, ICompletionProposalExtension2 {
+public class VelocityTemplateProposal implements ICompletionProposal, ICompletionProposalExtension2, IJavaCompletionProposal {
 	private VelocityMacro macro;
 	
 	private IRegion fSelectedRegion; // initialized by apply()
