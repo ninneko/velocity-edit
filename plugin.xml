@@ -61,6 +61,7 @@
             name="Velocity Editor"
             extensions="vm"
             icon="icons/template.gif"
+            contributorClass="org.eclipse.ui.texteditor.BasicTextEditorActionContributor"
             class="com.hudson.velocityweb.editors.velocity.VelocityMultiPageEditor"
             id="com.hudson.velocityweb.editors.velocity.VelocityMultiPageEditor">
       </editor>

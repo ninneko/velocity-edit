@@ -18,9 +18,9 @@ public class ToggleComment  implements IEditorActionDelegate {
 	private VelocityEditor editor;
 	
 	public void setActiveEditor(IAction arg0, IEditorPart arg1) {
-		if (editor != null) {
-			return;
-		}
+//		if (editor != null) {
+//			return;
+//		}
 		
 		if (arg1 instanceof VelocityMultiPageEditor) {
 			this.editor = ((VelocityMultiPageEditor) arg1).getEditor();
