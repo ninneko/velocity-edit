@@ -3,7 +3,7 @@
 <plugin
    id="com.hudson.velocityweb"
    name="Velocity Edit"
-   version="1.5.3"
+   version="1.6.0"
    provider-name="Sefler Zhou email: sefler@126.com"
    class="com.hudson.velocityweb.Plugin">
 
