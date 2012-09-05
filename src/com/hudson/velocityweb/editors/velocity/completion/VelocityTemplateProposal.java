@@ -1,14 +1,11 @@
 package com.hudson.velocityweb.editors.velocity.completion;
 
-import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.DocumentEvent;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.Position;
-import org.eclipse.jface.text.contentassist.ICompletionProposal;
-import org.eclipse.jface.text.contentassist.ICompletionProposalExtension2;
 import org.eclipse.jface.text.contentassist.IContextInformation;
 import org.eclipse.jface.text.link.LinkedModeModel;
 import org.eclipse.jface.text.link.LinkedModeUI;
@@ -20,7 +17,7 @@ import org.eclipse.ui.texteditor.link.EditorLinkedModeUI;
 
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacro;
 
-public class VelocityTemplateProposal implements ICompletionProposal, ICompletionProposalExtension2, IJavaCompletionProposal {
+public class VelocityTemplateProposal extends FuzzyMachCompletionProposal {
 	private VelocityMacro macro;
 	
 	private IRegion fSelectedRegion; // initialized by apply()
@@ -35,7 +32,8 @@ public class VelocityTemplateProposal implements ICompletionProposal, ICompletio
 
 	public VelocityTemplateProposal(String replacementString, Position replacementPosition, int cursorPosition,
 			Image image, String displayString, VelocityMacro macro) {
-
+		super(replacementString, replacementPosition.offset, replacementPosition.length, image, displayString, 10000);
+		
 		this.image = image;
 		this.replaceString = replacementString;
 		this.displayString = displayString;
@@ -91,15 +89,6 @@ public class VelocityTemplateProposal implements ICompletionProposal, ICompletio
 	}
 
 	@Override
-	public void apply(IDocument document) {
-		try {
-			document.replace(position.offset, position.length, replaceString);
-		} catch (BadLocationException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
 	public String getAdditionalProposalInfo() {
 		return null;
 	}
@@ -141,10 +130,5 @@ public class VelocityTemplateProposal implements ICompletionProposal, ICompletio
 		}
 		
 		return false;
-	}
-
-	@Override
-	public int getRelevance() {
-		return 0;
 	}
 }

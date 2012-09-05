@@ -12,6 +12,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.contentassist.CompletionProposal;
+import org.eclipse.jface.text.contentassist.ICompletionProposal;
 
 import com.hudson.velocityweb.Plugin;
 import com.hudson.velocityweb.editors.velocity.ContextValue;
@@ -327,7 +328,7 @@ public abstract class AbstractDirective implements IDirective {
 		}
 		catch (BadLocationException e) {}
 		if (dotIndex >= 0) endIndex = dotIndex;
-		List<CompletionProposal> proposals = new ArrayList<CompletionProposal>();
+		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		String pUpper = prefix.toUpperCase();
 		ContextValue[] values = ConfigurationManager.getInstance(file.getProject()).getContextValues(file, true);
 		for (int i=0; i<values.length; i++) {
@@ -341,12 +342,19 @@ public abstract class AbstractDirective implements IDirective {
 				if (propName.toUpperCase().startsWith(pUpper)) {
 					String actual = propName;
 					if (seenBrace && !seenEndBrace && dotIndex < 0) actual = propName + "}";
-					proposals.add(new CompletionProposal(
+					
+//					proposals.add(new CompletionProposal(
+//							actual,
+//							startIndex,
+//							endIndex-startIndex,
+//							propName.length(),
+//							Plugin.getDefault().getImage("con_var"), propName, null, null));
+					
+					proposals.add(new FuzzyMachCompletionProposal(
 							actual,
 							startIndex,
 							endIndex-startIndex,
-							propName.length(),
-							Plugin.getDefault().getImage("con_var"), propName, null, null));
+							Plugin.getDefault().getImage("con_var"), propName, 10000));
 				}
 			}
 		}
@@ -357,12 +365,19 @@ public abstract class AbstractDirective implements IDirective {
 				if (propName.toUpperCase().startsWith(pUpper)) {
 					String actual = propName;
 					if (seenBrace && !seenEndBrace && dotIndex < 0) actual = propName + "}";
-					proposals.add(new CompletionProposal(
+					
+					proposals.add(new FuzzyMachCompletionProposal(
 							actual,
 							startIndex,
 							endIndex-startIndex,
-							propName.length(),
-							Plugin.getDefault().getImage("local_var"), propName, null, null));
+							Plugin.getDefault().getImage("local_var"), propName, 10000));
+					
+//					proposals.add(new CompletionProposal(
+//							actual,
+//							startIndex,
+//							endIndex-startIndex,
+//							propName.length(),
+//							Plugin.getDefault().getImage("local_var"), propName, null, null));
 				}
 			}
 		}

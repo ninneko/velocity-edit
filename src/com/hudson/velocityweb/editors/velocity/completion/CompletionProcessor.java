@@ -121,14 +121,16 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 
 			if (null == proposals)
 				proposals = new ArrayList();
+			
 			if (isDirectiveCommand(viewer.getDocument(), offset)) {
 				proposals.addAll(getVelocityDirectiveProposals(editor.getFile(), viewer.getDocument(), offset));
 			} else {
-				ICompletionProposal[] computeCompletionProposals = xmlCompletionProcessor.computeCompletionProposals(
-						viewer, offset, editor.getFile());
-				if (computeCompletionProposals != null) {
-					proposals.addAll(Arrays.asList(computeCompletionProposals));
-				}
+				// disable xml completion proposal for duplocating with word completion proposal
+//				ICompletionProposal[] computeCompletionProposals = xmlCompletionProcessor.computeCompletionProposals(
+//						viewer, offset, editor.getFile());
+//				if (computeCompletionProposals != null) {
+//					proposals.addAll(Arrays.asList(computeCompletionProposals));
+//				}
 			}
 
 			proposals.addAll(getWordCompletionProposals(editor.getFile(), doc, offset));
@@ -312,27 +314,6 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 					insertString.append(")");
 
 					String displayString = insertString.toString() + " - " + macroFile.file.getName();
-					
-//					StringBuffer buffer = new StringBuffer();
-//					buffer.append(macro.name);
-//					buffer.append('(');
-//
-//					if (macro.parameters.length == 0) {
-//						buffer.append(')');
-//					} else {
-//						for (int k = 0; k < macro.parameters.length; k++) {
-//							buffer.append(macro.parameters[k]);
-//							if (k < (macro.parameters.length - 1)) {
-//								buffer.append(" ");
-//							}
-//						}
-//
-//						buffer.append(')');
-//						if (vf.file != null) {
-//							buffer.append(" - ");
-//							buffer.append(vf.file.getName());
-//						}
-//					}
 
 					Position position = new Position(start, end - start);
 					proposals.add(new VelocityTemplateProposal(insertString.toString(), position,
@@ -350,13 +331,20 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 		String[] directives = { "foreach", "if", "else", "end", "macro", "parse", "include", "stop", "elseif" };
 		for (int i = 0; i < directives.length; i++) {
 			if (directives[i].toUpperCase().startsWith(testPrefix)) {
-				if (directives[i].equals("else") || directives[i].equals("end") || directives[i].equals("stop")
-						|| directives[i].equals("elseif"))
-					proposals.add(new CompletionProposal(directives[i], start, end - start, directives[i].length(),
-							Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
-				else
-					proposals.add(new CompletionProposal(directives[i] + "()", start, end - start, directives[i]
-							.length() + 1, Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
+//				if (directives[i].equals("else") || directives[i].equals("end") || directives[i].equals("stop")
+//						|| directives[i].equals("elseif")) {
+					proposals.add(new FuzzyMachCompletionProposal(directives[i], start, end - start,
+							Plugin.getDefault().getImage(directives[i]), directives[i], 10000 - i));
+					
+//					proposals.add(new CompletionProposal(directives[i], start, end - start, directives[i].length(),
+//							Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
+//				}
+//				else {
+//					proposals.add(new FuzzyMachCompletionProposal(directives[i] + "()", start, end - start + 1,
+//							Plugin.getDefault().getImage(directives[i]), directives[i], 10000));
+//					proposals.add(new CompletionProposal(directives[i] + "()", start, end - start, directives[i]
+//							.length() + 1, Plugin.getDefault().getImage(directives[i]), directives[i], null, null));
+//				}
 			}
 		}
 		
