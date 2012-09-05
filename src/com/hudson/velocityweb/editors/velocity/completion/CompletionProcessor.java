@@ -374,7 +374,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	}
 
 	public char[] getCompletionProposalAutoActivationCharacters() {
-		return new String("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.$</#").toCharArray();
+		return new String("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.</#").toCharArray();
 	}
 
 	private static Comparator<Object> PROPOSAL_COMPARATOR = new Comparator<Object>() {

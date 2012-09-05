@@ -81,7 +81,7 @@ public class FuzzyMachCompletionProposal extends JavaCompletionProposal {
 			
 			if (prefix == null || string == null || prefix.length() > string.length())
 				return false;
-	
+			
 			matchPositions.clear();
 			if (getDisplayString() != null) {
 				super.getStyledDisplayString().setStyle(0, getDisplayString().length(), NO_MATCH_COLOR);
