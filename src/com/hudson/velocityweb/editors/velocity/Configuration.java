@@ -211,6 +211,8 @@ public class Configuration extends SourceViewerConfiguration {
         assistant.enableAutoActivation(true);
 		assistant.setAutoActivationDelay(Plugin.getDefault().getPreferenceStore()
 				.getInt(MainPreferences.AUTO_COMPLETE_DEPLAY));
+		
+		assistant.enableColoredLabels(true);
         return assistant;
     }
     

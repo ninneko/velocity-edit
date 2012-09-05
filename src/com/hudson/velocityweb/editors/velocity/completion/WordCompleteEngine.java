@@ -159,7 +159,7 @@ public class WordCompleteEngine {
 		
 		List<ICompletionProposal> proposals = new ArrayList<ICompletionProposal>();
 		for (String string : occurenceCountMap.keySet()) {
-			JavaCompletionProposal proposal = new JavaCompletionProposal(string, startPos, offset - startPos, Plugin
+			JavaCompletionProposal proposal = new WordCompletionProposal(string, startPos, offset - startPos, Plugin
 					.getDefault().getImage("wc"), string, 200 + occurenceCountMap.get(string));
 
 			proposals.add(proposal);
