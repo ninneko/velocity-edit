@@ -53,6 +53,9 @@ import com.hudson.velocityweb.editors.velocity.outline.OutlinePage;
 import com.hudson.velocityweb.manager.ConfigurationManager;
 import com.hudson.velocityweb.util.EditorUtil;
 
+/**
+ * @author sefler@126.com
+ */
 public class VelocityEditor extends AbstractDecoratedTextEditor implements ITextListener, MouseListener, KeyListener, FocusListener {
 
 	private ColorManager colorManager;
@@ -295,122 +298,122 @@ public class VelocityEditor extends AbstractDecoratedTextEditor implements IText
 				outlinePage.select(getCursorOffset());
 			}
 			else if (e.character == '\n' || e.character == '\r') {
-				int offset = getCursorOffset();
-				ITypedRegion region = null;
-				try {
-					region = (ITypedRegion) getRegion(offset);
-					if (null != region ) {
-						IDirective directive = DirectiveFactory.getDirective(region.getType(), region, getSourceViewer().getDocument());
-						if (null != directive) { return; }
-						if (region.getType().equals(PartitionScanner.XML_TAG)) return;
-					}
-				}
-				catch (BadLocationException e1) {}
-				try {
-					int previousLine = getSourceViewer().getDocument().getLineOfOffset(offset)-1;
-					int prevOffset = getSourceViewer().getDocument().getLineOffset(previousLine);
-					StringBuffer sb = new StringBuffer();
-					for (int i=prevOffset; i<getSourceViewer().getDocument().getLength(); i++) {
-						char c = getSourceViewer().getDocument().getChar(i);
-						if (Character.isWhitespace(c)) sb.append(c);
-						else break;
-					}
-					
-					boolean newlineReached = false;
-					for (int i=offset-1; i>=0; i--) {
-						char c = getSourceViewer().getDocument().getChar(i);
-						if (c == '\n') {
-							if (newlineReached) return;
-							newlineReached = true;
-						}
-						if (!Character.isWhitespace(c)) {
-							region = getSourceViewer().getDocument().getPartition(i-1);
-							if (null != region) {
-								if (region.getType().equals(PartitionScanner.XML_TAG)) {
-									if (isNodeHeader(region, getSourceViewer().getDocument())) {
-										Node node = new Node(null, region, getSourceViewer().getDocument());
-										if (!node.isPseudoFlatNode()) {
-											getSourceViewer().getDocument().replace(offset, 0, "\t");
-											getSourceViewer().setSelectedRange(offset+1, 0);
-											if (isNodeOffset()) {
-												String headerSpaces = getRegionSpacePrefix(region);
-												if (null == headerSpaces) headerSpaces = "";
-												String nl = "\n";
-												if (e.character == '\r') nl = "\r\n";
-												getSourceViewer().getDocument().replace(offset+1, 0, nl + headerSpaces + "</" + node.getName() + ">");
-											}
-										}
-										return;
-									}
-								}
-								else {
-									if (DirectiveFactory.isEndDirective(region.getType())) return;
-									IDirective directive = DirectiveFactory.getDirective(region.getType(), region, getSourceViewer().getDocument());
-									if (null != directive) {
-										if (directive.isStackScope()) {
-											getSourceViewer().getDocument().replace(offset, 0, "\t");
-											getSourceViewer().setSelectedRange(offset+1, 0);
-											if (isDirectiveOffset()) {
-												String headerSpaces = getRegionSpacePrefix(region);
-												String nl = "\n";
-												if (e.character == '\r') nl = "\r\n";
-												getSourceViewer().getDocument().replace(offset+1, 0, nl + headerSpaces + "#end");
-											}
-											return;
-										}
-									}
-								}
-							}
-							break;
-						}
-					}
-				}
-				catch (BadLocationException e1) {}
+//				int offset = getCursorOffset();
+//				ITypedRegion region = null;
+//				try {
+//					region = (ITypedRegion) getRegion(offset);
+//					if (null != region ) {
+//						IDirective directive = DirectiveFactory.getDirective(region.getType(), region, getSourceViewer().getDocument());
+//						if (null != directive) { return; }
+//						if (region.getType().equals(PartitionScanner.XML_TAG)) return;
+//					}
+//				}
+//				catch (BadLocationException e1) {}
+//				try {
+//					int previousLine = getSourceViewer().getDocument().getLineOfOffset(offset)-1;
+//					int prevOffset = getSourceViewer().getDocument().getLineOffset(previousLine);
+//					StringBuffer sb = new StringBuffer();
+//					for (int i=prevOffset; i<getSourceViewer().getDocument().getLength(); i++) {
+//						char c = getSourceViewer().getDocument().getChar(i);
+//						if (Character.isWhitespace(c)) sb.append(c);
+//						else break;
+//					}
+//					
+//					boolean newlineReached = false;
+//					for (int i=offset-1; i>=0; i--) {
+//						char c = getSourceViewer().getDocument().getChar(i);
+//						if (c == '\n') {
+//							if (newlineReached) return;
+//							newlineReached = true;
+//						}
+//						if (!Character.isWhitespace(c)) {
+//							region = getSourceViewer().getDocument().getPartition(i-1);
+//							if (null != region) {
+//								if (region.getType().equals(PartitionScanner.XML_TAG)) {
+//									if (isNodeHeader(region, getSourceViewer().getDocument())) {
+//										Node node = new Node(null, region, getSourceViewer().getDocument());
+//										if (!node.isPseudoFlatNode()) {
+//											getSourceViewer().getDocument().replace(offset, 0, "\t");
+//											getSourceViewer().setSelectedRange(offset+1, 0);
+//											if (isNodeOffset()) {
+//												String headerSpaces = getRegionSpacePrefix(region);
+//												if (null == headerSpaces) headerSpaces = "";
+//												String nl = "\n";
+//												if (e.character == '\r') nl = "\r\n";
+//												getSourceViewer().getDocument().replace(offset+1, 0, nl + headerSpaces + "</" + node.getName() + ">");
+//											}
+//										}
+//										return;
+//									}
+//								}
+//								else {
+//									if (DirectiveFactory.isEndDirective(region.getType())) return;
+//									IDirective directive = DirectiveFactory.getDirective(region.getType(), region, getSourceViewer().getDocument());
+//									if (null != directive) {
+//										if (directive.isStackScope()) {
+//											getSourceViewer().getDocument().replace(offset, 0, "\t");
+//											getSourceViewer().setSelectedRange(offset+1, 0);
+//											if (isDirectiveOffset()) {
+//												String headerSpaces = getRegionSpacePrefix(region);
+//												String nl = "\n";
+//												if (e.character == '\r') nl = "\r\n";
+//												getSourceViewer().getDocument().replace(offset+1, 0, nl + headerSpaces + "#end");
+//											}
+//											return;
+//										}
+//									}
+//								}
+//							}
+//							break;
+//						}
+//					}
+//				}
+//				catch (BadLocationException e1) {}
 			}
 			else if (e.character == ')') {
-				int offset = getCursorOffset();
-				try {
-					if (getSourceViewer().getDocument().getLength() > offset && getSourceViewer().getDocument().getChar(offset) == ')') {
-						ITypedRegion region = (ITypedRegion) getRegion(offset-1);
-						IDirective directive = DirectiveFactory.getDirective(region.getType(), region, getSourceViewer().getDocument());
-						if (null != directive) {
-							int stackSize = 0;
-							if (region.getOffset() + region.getLength() == offset)
-								getSourceViewer().getDocument().replace(offset, 1, "");
-						}
-					}
-				}
-				catch (Exception e1) {}
+//				int offset = getCursorOffset();
+//				try {
+//					if (getSourceViewer().getDocument().getLength() > offset && getSourceViewer().getDocument().getChar(offset) == ')') {
+//						ITypedRegion region = (ITypedRegion) getRegion(offset-1);
+//						IDirective directive = DirectiveFactory.getDirective(region.getType(), region, getSourceViewer().getDocument());
+//						if (null != directive) {
+//							int stackSize = 0;
+//							if (region.getOffset() + region.getLength() == offset)
+//								getSourceViewer().getDocument().replace(offset, 1, "");
+//						}
+//					}
+//				}
+//				catch (Exception e1) {}
 			}
 			else if (e.character == '(') {
-				int offset = getCursorOffset();
-				try {
-					int lineOfOffset = getSourceViewer().getDocument().getLineOfOffset(offset);
-					int lineOffset = getSourceViewer().getDocument().getLineOffset(lineOfOffset);
-					boolean hitSpace = false;
-					boolean hitContentAterSpace = false;
-					for (int i=offset-2; i>=lineOffset; i--) {
-						char c = getSourceViewer().getDocument().getChar(i);
-						if (Character.isLetterOrDigit(c) || Character.isWhitespace(c) || c=='#') {
-							if (c == '#') {
-								if (getSourceViewer().getDocument().getLength() == offset
-										|| getSourceViewer().getDocument().getChar(offset) == '\n'
-										|| getSourceViewer().getDocument().getChar(offset) == '\r') {
-									getSourceViewer().getDocument().replace(offset, 0, ")");
-								}
-							}
-							else if (Character.isWhitespace(c)) {
-								hitSpace = true;
-								if (hitContentAterSpace) return;
-							}
-							else {
-								if (hitSpace) hitContentAterSpace = true;
-							}
-						}
-						else return;
-					}
-				}
-				catch (Exception e1) {}
+//				int offset = getCursorOffset();
+//				try {
+//					int lineOfOffset = getSourceViewer().getDocument().getLineOfOffset(offset);
+//					int lineOffset = getSourceViewer().getDocument().getLineOffset(lineOfOffset);
+//					boolean hitSpace = false;
+//					boolean hitContentAterSpace = false;
+//					for (int i=offset-2; i>=lineOffset; i--) {
+//						char c = getSourceViewer().getDocument().getChar(i);
+//						if (Character.isLetterOrDigit(c) || Character.isWhitespace(c) || c=='#') {
+//							if (c == '#') {
+//								if (getSourceViewer().getDocument().getLength() == offset
+//										|| getSourceViewer().getDocument().getChar(offset) == '\n'
+//										|| getSourceViewer().getDocument().getChar(offset) == '\r') {
+//									getSourceViewer().getDocument().replace(offset, 0, ")");
+//								}
+//							}
+//							else if (Character.isWhitespace(c)) {
+//								hitSpace = true;
+//								if (hitContentAterSpace) return;
+//							}
+//							else {
+//								if (hitSpace) hitContentAterSpace = true;
+//							}
+//						}
+//						else return;
+//					}
+//				}
+//				catch (Exception e1) {}
 			}
 		}
 		catch (Throwable t) {}
@@ -420,23 +423,23 @@ public class VelocityEditor extends AbstractDecoratedTextEditor implements IText
 	}
 
 	public static final char CHAR_SLASH = '/';
-	private static boolean isNodeHeader(ITypedRegion region, IDocument document) throws BadLocationException {
-		for (int i=region.getOffset() + region.getLength()-2; i>=0; i--) {
-			char c = document.getChar(i);
-			if (!Character.isWhitespace(c)) {
-				if (c == CHAR_SLASH) return false;
-				else break;
-			}
-		}
-		for (int i=region.getOffset()+1; i<document.getLength(); i++) {
-			char c = document.getChar(i);
-			if (!Character.isWhitespace(c)) {
-				if (c == CHAR_SLASH) return false;
-				else break;
-			}
-		}
-		return true;
-	}
+//	private static boolean isNodeHeader(ITypedRegion region, IDocument document) throws BadLocationException {
+//		for (int i=region.getOffset() + region.getLength()-2; i>=0; i--) {
+//			char c = document.getChar(i);
+//			if (!Character.isWhitespace(c)) {
+//				if (c == CHAR_SLASH) return false;
+//				else break;
+//			}
+//		}
+//		for (int i=region.getOffset()+1; i<document.getLength(); i++) {
+//			char c = document.getChar(i);
+//			if (!Character.isWhitespace(c)) {
+//				if (c == CHAR_SLASH) return false;
+//				else break;
+//			}
+//		}
+//		return true;
+//	}
 
 	public boolean isDirectiveOffset () {
 		Stack directiveStack = new Stack();

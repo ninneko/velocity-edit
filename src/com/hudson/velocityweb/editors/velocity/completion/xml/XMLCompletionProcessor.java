@@ -15,270 +15,32 @@ import org.eclipse.jface.text.ITypedRegion;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
+import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
+import org.eclipse.jface.text.contentassist.IContextInformation;
+import org.eclipse.jface.text.contentassist.IContextInformationValidator;
 import org.eclipse.jface.text.templates.Template;
+import org.eclipse.jface.text.templates.TemplateCompletionProcessor;
 import org.eclipse.jface.text.templates.TemplateContextType;
 import org.eclipse.swt.graphics.Image;
 
+import com.hudson.velocityweb.Plugin;
 import com.hudson.velocityweb.css.CSSFile;
 import com.hudson.velocityweb.css.CSSParser;
 import com.hudson.velocityweb.css.CSSStyle;
 import com.hudson.velocityweb.editors.velocity.PartitionScanner;
 import com.hudson.velocityweb.editors.velocity.completion.Attribute;
+import com.hudson.velocityweb.editors.velocity.completion.FuzzyMachCompletionProposal;
 import com.hudson.velocityweb.javascript.JavascriptFile;
 import com.hudson.velocityweb.javascript.JavascriptFunction;
 import com.hudson.velocityweb.javascript.JavascriptParser;
 import com.hudson.velocityweb.manager.ConfigurationManager;
 
-public class XMLCompletionProcessor {
+public class XMLCompletionProcessor extends TemplateCompletionProcessor implements IContentAssistProcessor {
 
 	private IFile file;
 
 	public XMLCompletionProcessor(IFile file) {
 		this.file = file;
-	}
-
-	@SuppressWarnings("unchecked")
-	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset, IFile file) {
-		IDocument doc = viewer.getDocument();
-		CursorState cursorState = CursorState.getCursorState(doc, offset);
-		Node currentNode = null;
-//		if (null == currentNode) {
-			try {
-				for (int i = offset - 1; i >= 0; i--) {
-					char c = doc.getChar(i);
-					if (c == '>')
-						break;
-					else if (c == '<') {
-						Node parent = null;
-						if (cursorState.getNodeHierarchy().size() > 0)
-							parent = (Node) cursorState.getNodeHierarchy().peek();
-						currentNode = new Node(parent, i + 1, offset, doc);
-						break;
-					}
-				}
-			} catch (BadLocationException e) {
-			}
-//		}
-		
-		if (null != currentNode) {
-			try {
-				int state = currentNode.getState(offset);
-				if (state == CursorState.STATE_WAITING_FOR_NODE_END) {
-					return new ICompletionProposal[] { new CompletionProposal(">", offset, 0, offset + 1) };
-				} else if (state == CursorState.STATE_NODE_NAME || state == CursorState.STATE_WAITING_FOR_NODE_NAME) {
-					int type = currentNode.getType();
-					if (type == CursorState.TYPE_FOOTER) {
-						Node headerNode = currentNode.getParent();
-						if (null != headerNode) {
-							String text = headerNode.getName();
-							String actual = headerNode.getName() + '>';
-							// scan for end node
-							int endIndex = currentNode.getNameStart() + currentNode.getName().length();
-							try {
-								int i = currentNode.getNameStart() + currentNode.getName().length();
-								char c = doc.getChar(i);
-								while (Character.isWhitespace(c))
-									c = doc.getChar(++i);
-								if (c == '>') {
-									endIndex = i + 1;
-								}
-							} catch (BadLocationException e) {
-							}
-							return new ICompletionProposal[] { new CompletionProposal(actual,
-									currentNode.getNameStart(), endIndex - currentNode.getNameStart(),
-									actual.length(), null, text, null, null) };
-						}
-
-						return null;
-					}
-
-					try {
-						int start = currentNode.getNameStart();
-						if (start == -1)
-							start = currentNode.getOffsetStart();
-						int end = start + currentNode.getName().length();
-						String prefixUpper = doc.get(start, offset - start).toUpperCase();
-						String[] proposalArr = XMLSuggestor.getNodeSuggestions(currentNode.getParent(), file);
-						if (null == proposalArr)
-							return null;
-						List<CompletionProposal> rtn = new ArrayList<CompletionProposal>();
-						for (int i = 0; i < proposalArr.length; i++) {
-							if (prefixUpper.length() == 0 || proposalArr[i].toUpperCase().startsWith(prefixUpper)) {
-								rtn.add(new CompletionProposal(proposalArr[i], start, currentNode.getName().length(),
-										proposalArr[i].length()));
-							}
-						}
-						return getProposalArray(rtn);
-					} catch (BadLocationException e) {
-						return null;
-					}
-				} else if (state == CursorState.STATE_WAITING_FOR_ATTRIBUTE_NAME
-						|| state == CursorState.STATE_ATTRIBUTE_NAME) {
-					Attribute attribute = currentNode.getAttribute(offset);
-					if (null == attribute)
-						attribute = currentNode.getAttribute(offset + 1);
-					int start = offset;
-					int replaceLength = 0;
-					String currentAttributeName = null;
-					if (null != attribute) {
-						start = attribute.getNameOffset();
-						replaceLength = attribute.getName().length();
-						currentAttributeName = attribute.getName();
-					} else {
-						int i = offset;
-						try {
-							while (Character.isLetterOrDigit(doc.getChar(--i))) {}
-						} catch (BadLocationException e) {
-						}
-						
-						i++;
-						start = i;
-						i = offset;
-						try {
-							while (Character.isLetterOrDigit(doc.getChar(++i))) {}
-						} catch (BadLocationException e) {
-						}
-						
-						replaceLength = i - start - 1;
-						try {
-							currentAttributeName = doc.get(i, replaceLength);
-						} catch (BadLocationException e) {
-							try {
-								currentAttributeName = doc.get(i - replaceLength, replaceLength);
-							} catch (BadLocationException e1) {
-							}
-						}
-					}
-					StringBuffer postStr = new StringBuffer();
-					int equalsIndex = -1;
-					int index = start;
-					if (null != currentAttributeName)
-						index += currentAttributeName.length();
-					try {
-						char c = doc.getChar(index);
-						while (Character.isWhitespace(c) || c == '=') {
-							if (c == '=') {
-								equalsIndex = index;
-								break;
-							}
-							c = doc.getChar(++index);
-						}
-					} catch (BadLocationException e) {
-					}
-					if (equalsIndex == -1) {
-						postStr.append("=\"\"");
-					}
-
-					String prefixUpper = doc.get(start, offset - start).toUpperCase();
-					List proposalList = XMLSuggestor.getAttributeSuggestions(currentNode, currentAttributeName, file);
-					if (null == proposalList)
-						return null;
-					List rtn = new ArrayList();
-					for (Iterator i = proposalList.iterator(); i.hasNext();) {
-						String attributeName = (String) i.next();
-						String actual = attributeName;
-						if (attributeName.toUpperCase().startsWith(prefixUpper)) {
-							if (postStr.length() > 0) {
-								actual += postStr.toString();
-							}
-							int cursorOffset = actual.length();
-							if (actual.endsWith("\"\""))
-								cursorOffset--;
-							rtn.add(new CompletionProposal(actual, start, replaceLength, cursorOffset, null,
-									attributeName, null, null));
-						}
-					}
-					return getProposalArray(rtn);
-				} else if (state == CursorState.STATE_WAITING_FOR_ATTRIBUTE_VALUE_QUOTE) {
-					char c = doc.getChar(offset);
-					int i = offset;
-					try {
-						while (Character.isWhitespace(doc.getChar(++i))) {
-						}
-						if (doc.getChar(i) == '\"') {
-							// trim the spaces
-							return new ICompletionProposal[] { new CompletionProposal("\"", offset, i - offset + 1, 1) };
-						}
-					} catch (BadLocationException e) {
-					}
-					return null;
-				} else if (state == CursorState.STATE_ATTRIBUTE_VALUE) {
-					Attribute attribute = currentNode.getAttribute(offset);
-					if (null == attribute)
-						return null;
-
-					int start = attribute.getValueOffset();
-
-					StringBuffer postStr = new StringBuffer();
-					int quoteIndex = -1;
-					int index = start + attribute.getValue().length();
-					try {
-						char c = doc.getChar(index);
-						while (true) {
-							if (c == '\"') {
-								quoteIndex = index;
-								break;
-							} else if (Character.isWhitespace(c)) {
-								break;
-							}
-							c = doc.getChar(++index);
-						}
-					} catch (BadLocationException e) {
-					}
-					if (quoteIndex == -1) {
-						postStr.append("\"");
-					}
-					int replaceLength = attribute.getValue().length();
-					int lastCharIndex = -1;
-					boolean seenBreaker = false;
-					for (int i = start; i < start + attribute.getValue().length(); i++) {
-						char c = doc.getChar(i);
-						if (Character.isWhitespace(c))
-							seenBreaker = true;
-						else if (c == '=') {
-							if (lastCharIndex > 0)
-								replaceLength = lastCharIndex - start;
-							else
-								replaceLength = 0;
-							break;
-						} else if (!seenBreaker)
-							lastCharIndex = i;
-					}
-
-					String prefixUpper = doc.get(start, offset - start).toUpperCase();
-					if (attribute.getName().startsWith("on"))
-						return getJavascriptProposals(doc, prefixUpper, offset);
-					else {
-						String[] proposalArr = null;
-						if (attribute.getName().equalsIgnoreCase("class")) {
-							proposalArr = getCssProposals(file, doc, offset);
-						} else {
-							proposalArr = XMLSuggestor.getAttributeValueSuggestions(currentNode.getName(),
-									attribute.getName());
-						}
-						if (null == proposalArr)
-							return null;
-						List rtn = new ArrayList();
-						for (int i = 0; i < proposalArr.length; i++) {
-							String attributeValue = proposalArr[i];
-							String actual = attributeValue;
-							if (postStr.length() > 0) {
-								actual += postStr.toString();
-							}
-							if (attributeValue.toUpperCase().startsWith(prefixUpper)) {
-								rtn.add(new CompletionProposal(actual, start, replaceLength, actual.length(), null,
-										attributeValue, null, null));
-							}
-						}
-						return getProposalArray(rtn);
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
-		return null;
 	}
 
 	protected TemplateContextType getContextType(ITextViewer viewer, IRegion region) {
@@ -291,10 +53,6 @@ public class XMLCompletionProcessor {
 
 	protected Template[] getTemplates(String contextTypeId) {
 		return null;
-	}
-
-	public char[] getCompletionProposalAutoActivationCharacters() {
-		return new char[] { '/', '<', '\"' };
 	}
 
 	private ICompletionProposal[] getProposalArray(List proposals) {
@@ -432,21 +190,23 @@ public class XMLCompletionProcessor {
 							if (newEnd > -1) {
 								if (aPrefix.length() == 0)
 									newEnd++;
-								proposals.add(new CompletionProposal(func.name + "()", newStart, newEnd - newStart + 1,
-										cursorPos, null, buffer.toString(), null, null));
+								proposals.add(new FuzzyMachCompletionProposal(func.name + "()", newStart, newEnd - newStart + 1,
+										Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
+//								proposals.add(new CompletionProposal(func.name + "()", newStart, newEnd - newStart + 1,
+//										cursorPos, Plugin.getDefault().getImage("filter.gif"), buffer.toString(), null, null));
 							} else {
-								proposals.add(new CompletionProposal(insert.toString(), newStart, aPrefix.length()
-										- (newStart - anOffset), cursorPos, null, buffer.toString(), null, null));
+								proposals.add(new FuzzyMachCompletionProposal(insert.toString(), newStart, aPrefix.length()
+										- (newStart - anOffset), Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
 							}
 						} else {
 							if (newEnd > -1) {
 								if (aPrefix.length() == 0)
 									newEnd++;
-								proposals.add(new CompletionProposal(func.name, anOffset, aPrefix.length()
-										+ (newEnd - anOffset), cursorPos, null, buffer.toString(), null, null));
+								proposals.add(new FuzzyMachCompletionProposal(func.name, anOffset, aPrefix.length()
+										+ (newEnd - anOffset), Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
 							} else {
-								proposals.add(new CompletionProposal(insert.toString(), anOffset, aPrefix.length(),
-										cursorPos, null, buffer.toString(), null, null));
+								proposals.add(new FuzzyMachCompletionProposal(insert.toString(), anOffset, aPrefix.length(),
+										Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
 							}
 						}
 					}
@@ -614,4 +374,254 @@ public class XMLCompletionProcessor {
 			return false;
 		}
 	};
+
+	@Override
+	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer,
+			int offset) {
+		IDocument doc = viewer.getDocument();
+		CursorState cursorState = CursorState.getCursorState(doc, offset);
+		Node currentNode = null;
+//		if (null == currentNode) {
+			try {
+				for (int i = offset - 1; i >= 0; i--) {
+					char c = doc.getChar(i);
+					if (c == '>')
+						break;
+					else if (c == '<') {
+						Node parent = null;
+						if (cursorState.getNodeHierarchy().size() > 0)
+							parent = (Node) cursorState.getNodeHierarchy().peek();
+						currentNode = new Node(parent, i + 1, offset, doc);
+						break;
+					}
+				}
+			} catch (BadLocationException e) {
+			}
+//		}
+		
+		if (null != currentNode) {
+			try {
+				int state = currentNode.getState(offset);
+				if (state == CursorState.STATE_WAITING_FOR_NODE_END) {
+//					return new ICompletionProposal[] { new CompletionProposal(">", offset, 0, offset + 1) };
+				} else if (state == CursorState.STATE_NODE_NAME || state == CursorState.STATE_WAITING_FOR_NODE_NAME) {
+					int type = currentNode.getType();
+					if (type == CursorState.TYPE_FOOTER) {
+						Node headerNode = currentNode.getParent();
+						if (null != headerNode) {
+							String text = headerNode.getName();
+							String actual = headerNode.getName() + '>';
+							// scan for end node
+							int endIndex = currentNode.getNameStart() + currentNode.getName().length();
+							try {
+								int i = currentNode.getNameStart() + currentNode.getName().length();
+								char c = doc.getChar(i);
+								while (Character.isWhitespace(c))
+									c = doc.getChar(++i);
+								if (c == '>') {
+									endIndex = i + 1;
+								}
+							} catch (BadLocationException e) {
+							}
+							return new ICompletionProposal[] { new FuzzyMachCompletionProposal(actual,
+									currentNode.getNameStart(), endIndex - currentNode.getNameStart(),
+									Plugin.getDefault().getImage("tag_html"), text, 1) };
+						}
+
+						return null;
+					}
+
+					try {
+						int start = currentNode.getNameStart();
+						if (start == -1)
+							start = currentNode.getOffsetStart();
+						int end = start + currentNode.getName().length();
+						String prefixUpper = doc.get(start, offset - start).toUpperCase();
+						String[] proposalArr = XMLSuggestor.getNodeSuggestions(currentNode.getParent(), file);
+						if (null == proposalArr)
+							return null;
+						List<ICompletionProposal> rtn = new ArrayList<ICompletionProposal>();
+						for (int i = 0; i < proposalArr.length; i++) {
+							if (prefixUpper.length() == 0 || proposalArr[i].toUpperCase().startsWith(prefixUpper)) {
+								rtn.add(new FuzzyMachCompletionProposal(proposalArr[i], start, currentNode.getName().length(),
+										Plugin.getDefault().getImage("tag_html"), proposalArr[i], 1));
+							}
+						}
+						return getProposalArray(rtn);
+					} catch (BadLocationException e) {
+						return null;
+					}
+				} else if (state == CursorState.STATE_WAITING_FOR_ATTRIBUTE_NAME
+						|| state == CursorState.STATE_ATTRIBUTE_NAME) {
+					Attribute attribute = currentNode.getAttribute(offset);
+					if (null == attribute)
+						attribute = currentNode.getAttribute(offset + 1);
+					int start = offset;
+					int replaceLength = 0;
+					String currentAttributeName = null;
+					if (null != attribute) {
+						start = attribute.getNameOffset();
+						replaceLength = attribute.getName().length();
+						currentAttributeName = attribute.getName();
+					} else {
+						int i = offset;
+						try {
+							while (Character.isLetterOrDigit(doc.getChar(--i))) {}
+						} catch (BadLocationException e) {
+						}
+						
+						i++;
+						start = i;
+						i = offset;
+						try {
+							while (Character.isLetterOrDigit(doc.getChar(++i))) {}
+						} catch (BadLocationException e) {
+						}
+						
+						replaceLength = i - start - 1;
+						try {
+							currentAttributeName = doc.get(i, replaceLength);
+						} catch (BadLocationException e) {
+							try {
+								currentAttributeName = doc.get(i - replaceLength, replaceLength);
+							} catch (BadLocationException e1) {
+							}
+						}
+					}
+					StringBuffer postStr = new StringBuffer();
+					int equalsIndex = -1;
+					int index = start;
+					if (null != currentAttributeName)
+						index += currentAttributeName.length();
+					try {
+						char c = doc.getChar(index);
+						while (Character.isWhitespace(c) || c == '=') {
+							if (c == '=') {
+								equalsIndex = index;
+								break;
+							}
+							c = doc.getChar(++index);
+						}
+					} catch (BadLocationException e) {
+					}
+					if (equalsIndex == -1) {
+						postStr.append("=\"\"");
+					}
+
+					String prefixUpper = doc.get(start, offset - start).toUpperCase();
+					List proposalList = XMLSuggestor.getAttributeSuggestions(currentNode, currentAttributeName, file);
+					if (null == proposalList)
+						return null;
+					List rtn = new ArrayList();
+					for (Iterator i = proposalList.iterator(); i.hasNext();) {
+						String attributeName = (String) i.next();
+						String actual = attributeName;
+						if (attributeName.toUpperCase().startsWith(prefixUpper)) {
+//							if (postStr.length() > 0) {
+//								actual += postStr.toString();
+//							}
+//							int cursorOffset = actual.length();
+//							if (actual.endsWith("\"\""))
+//								cursorOffset--;
+							rtn.add(new FuzzyMachCompletionProposal(attributeName, start, replaceLength, Plugin.getDefault().getImage("tag_html"),
+									attributeName, 1));
+						}
+					}
+					return getProposalArray(rtn);
+				} else if (state == CursorState.STATE_WAITING_FOR_ATTRIBUTE_VALUE_QUOTE) {
+//					char c = doc.getChar(offset);
+//					int i = offset;
+//					try {
+//						while (Character.isWhitespace(doc.getChar(++i))) {
+//						}
+//						if (doc.getChar(i) == '\"') {
+//							// trim the spaces
+//							return new ICompletionProposal[] { new CompletionProposal("\"", offset, i - offset + 1, 1) };
+//						}
+//					} catch (BadLocationException e) {
+//					}
+					return null;
+				} else if (state == CursorState.STATE_ATTRIBUTE_VALUE) {
+					Attribute attribute = currentNode.getAttribute(offset);
+					if (null == attribute)
+						return null;
+
+					int start = attribute.getValueOffset();
+
+					StringBuffer postStr = new StringBuffer();
+					int quoteIndex = -1;
+					int index = start + attribute.getValue().length();
+					try {
+						char c = doc.getChar(index);
+						while (true) {
+							if (c == '\"') {
+								quoteIndex = index;
+								break;
+							} else if (Character.isWhitespace(c)) {
+								break;
+							}
+							c = doc.getChar(++index);
+						}
+					} catch (BadLocationException e) {
+					}
+					if (quoteIndex == -1) {
+						postStr.append("\"");
+					}
+					int replaceLength = attribute.getValue().length();
+					int lastCharIndex = -1;
+					boolean seenBreaker = false;
+					for (int i = start; i < start + attribute.getValue().length(); i++) {
+						char c = doc.getChar(i);
+						if (Character.isWhitespace(c))
+							seenBreaker = true;
+						else if (c == '=') {
+							if (lastCharIndex > 0)
+								replaceLength = lastCharIndex - start;
+							else
+								replaceLength = 0;
+							break;
+						} else if (!seenBreaker)
+							lastCharIndex = i;
+					}
+
+					String prefixUpper = doc.get(start, offset - start).toUpperCase();
+					if (attribute.getName().startsWith("on"))
+						return getJavascriptProposals(doc, prefixUpper, offset);
+					else {
+						String[] proposalArr = null;
+						if (attribute.getName().equalsIgnoreCase("class")) {
+							proposalArr = getCssProposals(file, doc, offset);
+						} else {
+							proposalArr = XMLSuggestor.getAttributeValueSuggestions(currentNode.getName(),
+									attribute.getName());
+						}
+						if (null == proposalArr)
+							return null;
+						List rtn = new ArrayList();
+						for (int i = 0; i < proposalArr.length; i++) {
+							String attributeValue = proposalArr[i];
+							String actual = attributeValue;
+							if (postStr.length() > 0) {
+								actual += postStr.toString();
+							}
+							if (attributeValue.toUpperCase().startsWith(prefixUpper)) {
+								rtn.add(new FuzzyMachCompletionProposal(actual, start, replaceLength, Plugin.getDefault().getImage("tag_style"),
+										attributeValue, 1));
+							}
+						}
+						return getProposalArray(rtn);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		return null;
+	}
+	
+	@Override
+	public char[] getCompletionProposalAutoActivationCharacters() {
+		return new String("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm</").toCharArray();
+	}
 }

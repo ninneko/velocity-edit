@@ -17,6 +17,7 @@ import org.eclipse.jface.text.source.SourceViewerConfiguration;
 
 import com.hudson.velocityweb.Plugin;
 import com.hudson.velocityweb.editors.velocity.completion.CompletionProcessor;
+import com.hudson.velocityweb.editors.velocity.completion.xml.XMLCompletionProcessor;
 import com.hudson.velocityweb.preferences.MainPreferences;
 
 public class Configuration extends SourceViewerConfiguration {
@@ -195,6 +196,7 @@ public class Configuration extends SourceViewerConfiguration {
     {
         ContentAssistant assistant = new ContentAssistant();
         CompletionProcessor completionProcessor = new CompletionProcessor(editor);
+        XMLCompletionProcessor xmlProcessor = new XMLCompletionProcessor(editor.getFile());
         assistant.setContentAssistProcessor(completionProcessor, IDocument.DEFAULT_CONTENT_TYPE);
         assistant.setContentAssistProcessor(completionProcessor, PartitionScanner.FOREACH_PARTITION);
         assistant.setContentAssistProcessor(completionProcessor, PartitionScanner.IF_PARTITION);
@@ -205,8 +207,8 @@ public class Configuration extends SourceViewerConfiguration {
         assistant.setContentAssistProcessor(completionProcessor, PartitionScanner.SET_PARTITION);
         assistant.setContentAssistProcessor(completionProcessor, PartitionScanner.STOP_PARTITION);
         assistant.setContentAssistProcessor(completionProcessor, PartitionScanner.VARIABLE_PARTITION);
-        assistant.setContentAssistProcessor(completionProcessor, PartitionScanner.XML_TAG);
-        assistant.setContentAssistProcessor(completionProcessor, PartitionScanner.XML_DEFAULT);
+        assistant.setContentAssistProcessor(xmlProcessor, PartitionScanner.XML_TAG);
+        assistant.setContentAssistProcessor(xmlProcessor, PartitionScanner.XML_DEFAULT);
         assistant.enableAutoInsert(true);
         assistant.enableAutoActivation(true);
 		assistant.setAutoActivationDelay(Plugin.getDefault().getPreferenceStore()

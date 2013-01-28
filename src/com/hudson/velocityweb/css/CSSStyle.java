@@ -1,8 +1,5 @@
 package com.hudson.velocityweb.css;
 
-/**
- * @author Joe Hudson
- */
 public class CSSStyle {
 
 	public String name;

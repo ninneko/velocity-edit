@@ -1,7 +1,6 @@
 package com.hudson.velocityweb.editors.velocity.completion;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,7 +19,6 @@ import org.eclipse.jface.text.IRegion;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.jface.text.ITypedRegion;
 import org.eclipse.jface.text.Position;
-import org.eclipse.jface.text.contentassist.CompletionProposal;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.jface.text.contentassist.IContentAssistProcessor;
 import org.eclipse.jface.text.templates.Template;
@@ -30,7 +28,6 @@ import org.eclipse.swt.graphics.Image;
 
 import com.hudson.velocityweb.Plugin;
 import com.hudson.velocityweb.editors.velocity.VelocityEditor;
-import com.hudson.velocityweb.editors.velocity.completion.xml.XMLCompletionProcessor;
 import com.hudson.velocityweb.editors.velocity.parser.VelocityFile;
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacro;
 import com.hudson.velocityweb.editors.velocity.parser.VelocityMacroParser;
@@ -39,11 +36,11 @@ import com.hudson.velocityweb.manager.ConfigurationManager;
 public class CompletionProcessor extends TemplateCompletionProcessor implements IContentAssistProcessor {
 
 	private VelocityEditor editor;
-	private XMLCompletionProcessor xmlCompletionProcessor;
+//	private XMLCompletionProcessor xmlCompletionProcessor;
 
 	public CompletionProcessor(VelocityEditor editor) {
 		this.editor = editor;
-		this.xmlCompletionProcessor = new XMLCompletionProcessor(editor.getFile());
+//		this.xmlCompletionProcessor = new XMLCompletionProcessor(editor.getFile());
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -374,7 +371,7 @@ public class CompletionProcessor extends TemplateCompletionProcessor implements 
 	}
 
 	public char[] getCompletionProposalAutoActivationCharacters() {
-		return new String("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.</#").toCharArray();
+		return new String("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm.#").toCharArray();
 	}
 
 	private static Comparator<Object> PROPOSAL_COMPARATOR = new Comparator<Object>() {
