@@ -116,6 +116,16 @@
                style="push"
                tooltip="Toggle comment for selected lines">
          </action>
+         <action
+               class="com.hudson.velocityweb.editors.actions.FormatCode"
+               definitionId="Format Velocity Code"
+               id="com.hudson.velocityweb.editors.context.actions.formatCode"
+               label="Format"
+               menubarPath="velocityEditorContextMenu/additions"
+               state="true"
+               style="push"
+               tooltip="Format code to make code cleaner">
+         </action>
 		</viewerContribution>
 	</extension>
  <extension
@@ -129,9 +139,20 @@
              id="com.hudson.velocityweb.editor.toggleComment"
              label="Toggle Comment"
              menubarPath="velocityEditorMenu/additions"
+             state="true"
              style="push"
              tooltip="Toggle comment for selected lines">
        </action>
+       <action
+             class="com.hudson.velocityweb.editors.actions.FormatCode"
+             definitionId="com.hudson.velocityweb.editor.formatCodeCommand"
+             id="com.hudson.velocityweb.editor.formatCode"
+             label="Format"
+             menubarPath="velocityEditorMenu/additions"
+             state="true"
+             style="push"
+             tooltip="Format code to make code cleaner">
+         </action>
        <menu
              id="velocityEditorMenu"
              label="Sources">
@@ -155,6 +176,10 @@
     <command
           id="com.hudson.velocityweb.editor.toggleCommentCommand"
           name="Toggle Comment Command">
+    </command>
+    <command
+          id="com.hudson.velocityweb.editor.formatCodeCommand"
+          name="Format Code Command">
     </command>
  </extension>
  <extension
