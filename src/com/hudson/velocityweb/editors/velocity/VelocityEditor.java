@@ -42,6 +42,7 @@ import org.eclipse.ui.texteditor.ContentAssistAction;
 import org.eclipse.ui.texteditor.ITextEditorActionDefinitionIds;
 import org.eclipse.ui.views.contentoutline.IContentOutlinePage;
 
+import com.googlecode.veloeclipse.vaulttec.ui.editor.VelocityEditorEnvironment;
 import com.hudson.velocityweb.Plugin;
 import com.hudson.velocityweb.editors.velocity.completion.DirectiveFactory;
 import com.hudson.velocityweb.editors.velocity.completion.DocumentProvider;

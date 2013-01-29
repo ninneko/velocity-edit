@@ -8,7 +8,7 @@
    class="com.hudson.velocityweb.Plugin">
 
    <runtime>
-      <library name="velocity-dep-1.4.jar">
+      <library name="velocity-1.6.2-dep.jar">
          <export name="*"/>
       </library>
       <library name="dtdparser121.jar">
@@ -40,6 +40,16 @@
                name="*">
          </export>
       </library>
+      <library name="jtidy-r938.jar">
+         <export
+               name="*">
+         </export>
+      </library>
+      <library name="htmlparser.jar">
+         <export
+               name="*">
+         </export>
+      </library>
    </runtime>
 
    <requires>
@@ -53,6 +63,7 @@
       <import plugin="org.eclipse.ui.ide"/>
       <import plugin="org.eclipse.ui.views"/>
       <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.compare" version="3.5.300"/>
    </requires>
 
    <extension
@@ -169,6 +180,12 @@
           contextId="com.hudson.velocityweb.velocityContext"
           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
           sequence="M1+/">
+    </key>
+    <key
+          commandId="com.hudson.velocityweb.editor.formatCodeCommand"
+          contextId="com.hudson.velocityweb.velocityContext"
+          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+          sequence="M1+M2+F">
     </key>
  </extension>
  <extension

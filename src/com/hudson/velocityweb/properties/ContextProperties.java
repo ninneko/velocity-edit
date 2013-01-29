@@ -68,9 +68,9 @@ public class ContextProperties extends PropertyPage {
             subComp.setLayout(new GridLayout(2, false));
             subComp.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             try {
-	            javascriptDirectory = new DirectoryEditor(getShell(), subComp, "Javascript Direcotory", project.getPersistentProperty(Constants.newQualifiedName(Constants.DIR_JAVASCRIPT)));
-	            cssDirectory = new DirectoryEditor(getShell(), subComp, "CSS Direcotory", project.getPersistentProperty(Constants.newQualifiedName(Constants.DIR_CSS)));
-	            macroDirectory = new DirectoryEditor(getShell(), subComp, "Macro Direcotory", project.getPersistentProperty(Constants.newQualifiedName(Constants.DIR_MACROS)));
+	            javascriptDirectory = new DirectoryEditor(getShell(), subComp, "Javascript Directory", project.getPersistentProperty(Constants.newQualifiedName(Constants.DIR_JAVASCRIPT)));
+	            cssDirectory = new DirectoryEditor(getShell(), subComp, "CSS Directory", project.getPersistentProperty(Constants.newQualifiedName(Constants.DIR_CSS)));
+	            macroDirectory = new DirectoryEditor(getShell(), subComp, "Macro Directory", project.getPersistentProperty(Constants.newQualifiedName(Constants.DIR_MACROS)));
 	            dtdFile = new FileEditor(getShell(), subComp, "DTD File", project.getPersistentProperty(Constants.newQualifiedName(Constants.FILE_DTD)));
             }
             catch (CoreException ce) {}

@@ -10,9 +10,11 @@
 	<classpathentry exported="true" kind="lib" path="lucene-core-3.6.0.jar" sourcepath="lucene-core-3.6.0-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="IKAnalyzer2012.jar"/>
 	<classpathentry exported="true" kind="lib" path="commons-lang3-3.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="velocity-dep-1.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="dtdparser121.jar"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="htmlparser.jar"/>
+	<classpathentry kind="lib" path="velocity-1.6.2-dep.jar"/>
+	<classpathentry kind="lib" path="jtidy-r938.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
