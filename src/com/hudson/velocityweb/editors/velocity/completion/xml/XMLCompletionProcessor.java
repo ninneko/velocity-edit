@@ -190,23 +190,30 @@ public class XMLCompletionProcessor extends TemplateCompletionProcessor implemen
 							if (newEnd > -1) {
 								if (aPrefix.length() == 0)
 									newEnd++;
-								proposals.add(new FuzzyMachCompletionProposal(func.name + "()", newStart, newEnd - newStart + 1,
-										Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
-//								proposals.add(new CompletionProposal(func.name + "()", newStart, newEnd - newStart + 1,
-//										cursorPos, Plugin.getDefault().getImage("filter.gif"), buffer.toString(), null, null));
+								proposals.add(new FuzzyMachCompletionProposal(func.name + "()", newStart, newEnd
+										- newStart + 1, Plugin.getDefault().getImage("tag_script"), buffer.toString(),
+										1));
+								// proposals.add(new
+								// CompletionProposal(func.name + "()",
+								// newStart, newEnd - newStart + 1,
+								// cursorPos,
+								// Plugin.getDefault().getImage("filter.gif"),
+								// buffer.toString(), null, null));
 							} else {
-								proposals.add(new FuzzyMachCompletionProposal(insert.toString(), newStart, aPrefix.length()
-										- (newStart - anOffset), Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
+								proposals.add(new FuzzyMachCompletionProposal(insert.toString(), newStart, aPrefix
+										.length() - (newStart - anOffset), Plugin.getDefault().getImage("tag_script"),
+										buffer.toString(), 1));
 							}
 						} else {
 							if (newEnd > -1) {
 								if (aPrefix.length() == 0)
 									newEnd++;
 								proposals.add(new FuzzyMachCompletionProposal(func.name, anOffset, aPrefix.length()
-										+ (newEnd - anOffset), Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
+										+ (newEnd - anOffset), Plugin.getDefault().getImage("tag_script"), buffer
+										.toString(), 1));
 							} else {
-								proposals.add(new FuzzyMachCompletionProposal(insert.toString(), anOffset, aPrefix.length(),
-										Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
+								proposals.add(new FuzzyMachCompletionProposal(insert.toString(), anOffset, aPrefix
+										.length(), Plugin.getDefault().getImage("tag_script"), buffer.toString(), 1));
 							}
 						}
 					}
@@ -376,34 +383,34 @@ public class XMLCompletionProcessor extends TemplateCompletionProcessor implemen
 	};
 
 	@Override
-	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer,
-			int offset) {
+	public ICompletionProposal[] computeCompletionProposals(ITextViewer viewer, int offset) {
 		IDocument doc = viewer.getDocument();
 		CursorState cursorState = CursorState.getCursorState(doc, offset);
 		Node currentNode = null;
-//		if (null == currentNode) {
-			try {
-				for (int i = offset - 1; i >= 0; i--) {
-					char c = doc.getChar(i);
-					if (c == '>')
-						break;
-					else if (c == '<') {
-						Node parent = null;
-						if (cursorState.getNodeHierarchy().size() > 0)
-							parent = (Node) cursorState.getNodeHierarchy().peek();
-						currentNode = new Node(parent, i + 1, offset, doc);
-						break;
-					}
+		// if (null == currentNode) {
+		try {
+			for (int i = offset - 1; i >= 0; i--) {
+				char c = doc.getChar(i);
+				if (c == '>')
+					break;
+				else if (c == '<') {
+					Node parent = null;
+					if (cursorState.getNodeHierarchy().size() > 0)
+						parent = (Node) cursorState.getNodeHierarchy().peek();
+					currentNode = new Node(parent, i + 1, offset, doc);
+					break;
 				}
-			} catch (BadLocationException e) {
 			}
-//		}
-		
+		} catch (BadLocationException e) {
+		}
+		// }
+
 		if (null != currentNode) {
 			try {
 				int state = currentNode.getState(offset);
 				if (state == CursorState.STATE_WAITING_FOR_NODE_END) {
-//					return new ICompletionProposal[] { new CompletionProposal(">", offset, 0, offset + 1) };
+					// return new ICompletionProposal[] { new
+					// CompletionProposal(">", offset, 0, offset + 1) };
 				} else if (state == CursorState.STATE_NODE_NAME || state == CursorState.STATE_WAITING_FOR_NODE_NAME) {
 					int type = currentNode.getType();
 					if (type == CursorState.TYPE_FOOTER) {
@@ -424,8 +431,8 @@ public class XMLCompletionProcessor extends TemplateCompletionProcessor implemen
 							} catch (BadLocationException e) {
 							}
 							return new ICompletionProposal[] { new FuzzyMachCompletionProposal(actual,
-									currentNode.getNameStart(), endIndex - currentNode.getNameStart(),
-									Plugin.getDefault().getImage("tag_html"), text, 1) };
+									currentNode.getNameStart(), endIndex - currentNode.getNameStart(), Plugin
+											.getDefault().getImage("tag_html"), text, 1) };
 						}
 
 						return null;
@@ -443,8 +450,8 @@ public class XMLCompletionProcessor extends TemplateCompletionProcessor implemen
 						List<ICompletionProposal> rtn = new ArrayList<ICompletionProposal>();
 						for (int i = 0; i < proposalArr.length; i++) {
 							if (prefixUpper.length() == 0 || proposalArr[i].toUpperCase().startsWith(prefixUpper)) {
-								rtn.add(new FuzzyMachCompletionProposal(proposalArr[i], start, currentNode.getName().length(),
-										Plugin.getDefault().getImage("tag_html"), proposalArr[i], 1));
+								rtn.add(new FuzzyMachCompletionProposal(proposalArr[i], start, currentNode.getName()
+										.length(), Plugin.getDefault().getImage("tag_html"), proposalArr[i], 1));
 							}
 						}
 						return getProposalArray(rtn);
@@ -466,18 +473,20 @@ public class XMLCompletionProcessor extends TemplateCompletionProcessor implemen
 					} else {
 						int i = offset;
 						try {
-							while (Character.isLetterOrDigit(doc.getChar(--i))) {}
+							while (Character.isLetterOrDigit(doc.getChar(--i))) {
+							}
 						} catch (BadLocationException e) {
 						}
-						
+
 						i++;
 						start = i;
 						i = offset;
 						try {
-							while (Character.isLetterOrDigit(doc.getChar(++i))) {}
+							while (Character.isLetterOrDigit(doc.getChar(++i))) {
+							}
 						} catch (BadLocationException e) {
 						}
-						
+
 						replaceLength = i - start - 1;
 						try {
 							currentAttributeName = doc.get(i, replaceLength);
@@ -517,29 +526,30 @@ public class XMLCompletionProcessor extends TemplateCompletionProcessor implemen
 						String attributeName = (String) i.next();
 						String actual = attributeName;
 						if (attributeName.toUpperCase().startsWith(prefixUpper)) {
-//							if (postStr.length() > 0) {
-//								actual += postStr.toString();
-//							}
-//							int cursorOffset = actual.length();
-//							if (actual.endsWith("\"\""))
-//								cursorOffset--;
-							rtn.add(new FuzzyMachCompletionProposal(attributeName, start, replaceLength, Plugin.getDefault().getImage("tag_html"),
-									attributeName, 1));
+							// if (postStr.length() > 0) {
+							// actual += postStr.toString();
+							// }
+							// int cursorOffset = actual.length();
+							// if (actual.endsWith("\"\""))
+							// cursorOffset--;
+							rtn.add(new FuzzyMachCompletionProposal(attributeName, start, replaceLength, Plugin
+									.getDefault().getImage("tag_html"), attributeName, 1));
 						}
 					}
 					return getProposalArray(rtn);
 				} else if (state == CursorState.STATE_WAITING_FOR_ATTRIBUTE_VALUE_QUOTE) {
-//					char c = doc.getChar(offset);
-//					int i = offset;
-//					try {
-//						while (Character.isWhitespace(doc.getChar(++i))) {
-//						}
-//						if (doc.getChar(i) == '\"') {
-//							// trim the spaces
-//							return new ICompletionProposal[] { new CompletionProposal("\"", offset, i - offset + 1, 1) };
-//						}
-//					} catch (BadLocationException e) {
-//					}
+					// char c = doc.getChar(offset);
+					// int i = offset;
+					// try {
+					// while (Character.isWhitespace(doc.getChar(++i))) {
+					// }
+					// if (doc.getChar(i) == '\"') {
+					// // trim the spaces
+					// return new ICompletionProposal[] { new
+					// CompletionProposal("\"", offset, i - offset + 1, 1) };
+					// }
+					// } catch (BadLocationException e) {
+					// }
 					return null;
 				} else if (state == CursorState.STATE_ATTRIBUTE_VALUE) {
 					Attribute attribute = currentNode.getAttribute(offset);
@@ -585,32 +595,58 @@ public class XMLCompletionProcessor extends TemplateCompletionProcessor implemen
 					}
 
 					String prefixUpper = doc.get(start, offset - start).toUpperCase();
+					String prefix = doc.get(start, offset - start);
 					if (attribute.getName().startsWith("on"))
 						return getJavascriptProposals(doc, prefixUpper, offset);
-					else {
-						String[] proposalArr = null;
-						if (attribute.getName().equalsIgnoreCase("class")) {
-							proposalArr = getCssProposals(file, doc, offset);
-						} else {
-							proposalArr = XMLSuggestor.getAttributeValueSuggestions(currentNode.getName(),
-									attribute.getName());
-						}
+
+					String[] proposalArr = null;
+					List rtn = new ArrayList();
+					if (attribute.getName().equalsIgnoreCase("class")) {
+						proposalArr = getCssProposals(file, doc, offset);
+						
 						if (null == proposalArr)
 							return null;
-						List rtn = new ArrayList();
 						for (int i = 0; i < proposalArr.length; i++) {
 							String attributeValue = proposalArr[i];
 							String actual = attributeValue;
 							if (postStr.length() > 0) {
 								actual += postStr.toString();
 							}
-							if (attributeValue.toUpperCase().startsWith(prefixUpper)) {
-								rtn.add(new FuzzyMachCompletionProposal(actual, start, replaceLength, Plugin.getDefault().getImage("tag_style"),
-										attributeValue, 1));
+
+							String[] split = prefix.split(" ");
+							int lastIndexOf = prefix.lastIndexOf(" ");
+							int additional = 0;
+							if (lastIndexOf > 0) {
+								additional = prefix.substring(0, lastIndexOf).length() + 1;
+							}
+							String lastCSSNameString = split[split.length - 1];
+
+							if (attributeValue.toUpperCase().startsWith(lastCSSNameString.toUpperCase())) {
+								rtn.add(new FuzzyMachCompletionProposal(actual, start + additional, lastCSSNameString.length(), Plugin.getDefault()
+										.getImage("tag_style"), attributeValue, 1));
 							}
 						}
-						return getProposalArray(rtn);
+					} else {
+						proposalArr = XMLSuggestor.getAttributeValueSuggestions(currentNode.getName(),
+								attribute.getName());
+						
+						if (null == proposalArr)
+							return null;
+						
+						for (int i = 0; i < proposalArr.length; i++) {
+							String attributeValue = proposalArr[i];
+							String actual = attributeValue;
+							if (postStr.length() > 0) {
+								actual += postStr.toString();
+							}
+							
+							if (attributeValue.toUpperCase().startsWith(prefix.toUpperCase())) {
+								rtn.add(new FuzzyMachCompletionProposal(actual, start, replaceLength, Plugin.getDefault()
+										.getImage("tag_style"), attributeValue, 1));
+							}
+						}
 					}
+					return getProposalArray(rtn);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -619,7 +655,7 @@ public class XMLCompletionProcessor extends TemplateCompletionProcessor implemen
 		}
 		return null;
 	}
-	
+
 	@Override
 	public char[] getCompletionProposalAutoActivationCharacters() {
 		return new String("QWERTYUIOPASDFGHJKLZXCVBNMqwertyuiopasdfghjklzxcvbnm</").toCharArray();
