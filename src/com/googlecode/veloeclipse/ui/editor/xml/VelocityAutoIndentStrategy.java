@@ -967,6 +967,12 @@ public class VelocityAutoIndentStrategy extends DefaultIndentLineAutoEditStrateg
         try
         {
             char c = document.getChar(start++);
+            if (c == '#' && start < end) {
+				if (document.getChar(start) == '#') {
+					return "##";
+				}
+			}
+            
             if (isVeloIdentifierStart(c))
             {
                 while (start < end)

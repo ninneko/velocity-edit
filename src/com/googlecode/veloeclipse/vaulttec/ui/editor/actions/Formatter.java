@@ -80,12 +80,12 @@ public class Formatter {
 				// Get result
 				newText = buf.toString();
 				String patternStrClose, replaceStrClose = "";
-				patternStrClose = "(</.*?>|<.*?/>)";
+				patternStrClose = "(?<!##[^\n]{0,999}?)(</.*?>|<.*?/>)";
 				replaceStrClose = "$1\n";
 				pattern = Pattern.compile(patternStrClose, Pattern.MULTILINE);
 				matcher = pattern.matcher(newText);
 				newText = matcher.replaceAll(replaceStrClose);
-				patternStrClose = "(<(?!/)[a-zA-Z].*?>)\\s*?(?=<(?!/)[a-zA-Z].*?>)";
+				patternStrClose = "(?<!##[^\n]{0,999}?)(<(?!/)[a-zA-Z].*?>)\\s*?(?=<(?!/)[a-zA-Z].*?>)";
 				replaceStrClose = "$1\n";
 				pattern = Pattern.compile(patternStrClose, Pattern.MULTILINE);
 				matcher = pattern.matcher(newText);
@@ -305,6 +305,10 @@ public class Formatter {
 					start + doc.getLineLength(line));
 			String f = VelocityAutoIndentStrategy.getVeloIdentifier(doc,
 					whiteend, whiteend + 10);
+			if (f.equals("##")) {
+				return "";
+			}
+			
 			if ((f != null) && (f.equals("#end") || f.equals("#elseif") || f.equals("#else"))) {
 				return smartindentonVeloTab(doc, originalCmdOffset);
 			}
